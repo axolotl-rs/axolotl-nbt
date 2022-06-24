@@ -27,7 +27,7 @@ pub enum Value {
     },
     ByteArray {
         name: String,
-        value: Vec<u8>,
+        value: Vec<i8>,
     },
     String {
         name: String,
@@ -55,13 +55,14 @@ pub enum Value {
 
 #[derive(PartialEq,Clone,Debug)]
 pub enum NameLessValue {
+    End,
     Byte(i8),
     Short(i16),
     Int(i32),
     Long(i64),
     Float(f32),
     Double(f64),
-    ByteArray(Vec<u8>),
+    ByteArray(Vec<i8>),
     String(String),
     List(Vec<NameLessValue>),
     Compound(Vec<Value>),
