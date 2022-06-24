@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 use std::io::Error;
-use tokio::io::AsyncBufReadExt;
+use tokio::io::{AsyncBufReadExt, AsyncReadExt};
 use crate::{Binary, NBTReader, Tag};
 
 #[derive(PartialEq, Clone, Debug)]
@@ -77,7 +77,7 @@ pub enum NameLessValue {
 }
 
 #[cfg(feature = "tokio")]
-impl<Read: AsyncBufReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
+impl<Read: AsyncReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
     pub async fn read_value(&mut self) -> Result<Value, Error> {
         let (tag, len) = self.read_tag_id_with_id_len().await?;
         if let Tag::End = tag {

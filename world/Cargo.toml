@@ -6,4 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axolotl-nbt = { path = "../nbt" }
+axolotl-nbt = { path = "../nbt" , features=["value","async_io"]}
+
+tokio = { version = "1.19.2", features = ["io-util"], optional = true }
+byteorder = { version = "1.4.3" }
+async-recursion = { version = "1.0.0", optional = true }
+async-compression = { version = "0.3.14", features = ["all-algorithms", "tokio"], optional = true }
+
+[features]
+async_io = ["tokio", "async-recursion", "async-compression", "axolotl-nbt/async_io"]
+[dev-dependencies]
+tokio = { version = "1.19.2", features = ["full"] }
+async-compression = { version = "0.3.14", features = ["all-algorithms", "tokio"] }
+flate2 = { version = "1.0.24" }
+axolotl-nbt = { path = "../nbt" , features=["tokio", "value"]}

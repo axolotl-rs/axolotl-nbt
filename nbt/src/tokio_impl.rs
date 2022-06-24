@@ -14,8 +14,8 @@ pub mod test {
     #[tokio::test]
     pub async fn test() {
         let path = Path::new("C:\\Users\\wherk\\AppData\\Roaming\\.minecraft\\saves\\New World\\playerdata\\d087006b-d72c-4cdf-924d-6f903704d05c.dat");
-        let  reader = tokio::fs::File::open(path).await.unwrap();
-        let  x = GzipDecoder::new(BufReader::new(reader));
+        let reader = tokio::fs::File::open(path).await.unwrap();
+        let x = GzipDecoder::new(BufReader::new(reader));
         let mut reader = NBTReader {
             src: BufReader::new(x),
             phantom: PhantomData::<Binary>::default(),
@@ -24,7 +24,9 @@ pub mod test {
         println!("{:#?}", value);
     }
 }
+
 impl<Read: AsyncBufReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
+    /// Uses a Fill Buf to read the next tag id without moving the cursor.
     pub async fn peak_tag_id(&mut self) -> Result<Tag, Error> {
         let result = self.src.fill_buf().await?[0];
         Tag::from_u8(result).ok_or_else(|| Error::new(
@@ -32,14 +34,16 @@ impl<Read: AsyncBufReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
             format!("Invalid Tag Id {}", result),
         ))
     }
+
+}
+
+impl<Read: AsyncReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
     /// You will need to convert this to a String.
     pub async fn read_str_as_bytes(&mut self, size: u16) -> Result<Vec<u8>, Error> {
-        let result = self.src.fill_buf().await?[..size as usize].to_vec();
-        self.src.consume(size as usize);
+        let mut result = Vec::with_capacity(size as usize);
+        AsyncReadExt::take(&mut self.src, size as u64).read_to_end(&mut result).await?;
         Ok(result)
     }
-}
-impl<Read: AsyncReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
     pub async fn read_tag_id(&mut self) -> Result<Tag, Error> {
         let result = self.src.read_u8().await?;
         Tag::from_u8(result).ok_or_else(|| Error::new(
