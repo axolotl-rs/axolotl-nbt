@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 pub mod value;
 mod tokio_impl;
-
+#[derive(PartialEq)]
 pub enum Tag {
     End,
     Byte,
