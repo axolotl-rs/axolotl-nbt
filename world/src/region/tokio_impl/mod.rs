@@ -77,13 +77,13 @@ impl<Read: AsyncReadExt + AsyncSeekExt + Unpin + Send + Debug> RegionReader<Read
         let take = AsyncReadExt::take(&mut self.src, (result.length-1) as u64);
         let value = match &result.compression_type {
             CompressionType::Gzip => {
-                NBTReader::new(BufReader::new(GzipDecoder::new(BufReader::new(take)))).read_value().await?
+                NBTReader::new(BufReader::new(GzipDecoder::new(BufReader::new(take)))).async_read_value().await?
             }
             CompressionType::Zlib => {
-                NBTReader::new(BufReader::new(ZlibDecoder::new(BufReader::new(take)))).read_value().await?
+                NBTReader::new(BufReader::new(ZlibDecoder::new(BufReader::new(take)))).async_read_value().await?
             }
             CompressionType::Uncompressed => {
-                NBTReader::new(BufReader::new(take)).read_value().await?
+                NBTReader::new(BufReader::new(take)).async_read_value().await?
             }
             CompressionType::Custom(_) => {
                 return Err(Error::new(std::io::ErrorKind::Other, "Custom compression not supported"));

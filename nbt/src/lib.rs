@@ -5,6 +5,7 @@ use std::marker::PhantomData;
 pub mod value;
 #[cfg(feature = "tokio")]
 pub mod tokio_impl;
+pub mod sync;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Tag {
