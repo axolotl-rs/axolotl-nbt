@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 pub mod value;
 mod tokio_impl;
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum Tag {
     End,
     Byte,
@@ -50,5 +50,5 @@ impl NBTFormat for Binary {}
 
 pub struct NBTReader<Type: NBTFormat, Src> {
     src: Src,
-    phantom: PhantomData<(Type)>,
+    phantom: PhantomData<Type>,
 }

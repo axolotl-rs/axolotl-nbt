@@ -1,4 +1,4 @@
-#[derive(PartialEq)]
+#[derive(PartialEq,Clone,Debug)]
 pub enum Value {
     End,
     Byte {
@@ -35,7 +35,7 @@ pub enum Value {
     },
     List {
         name: String,
-        value: Vec<Value>,
+        value: Vec<NameLessValue>,
     },
     Compound {
         name: String,
@@ -49,5 +49,23 @@ pub enum Value {
         name: String,
         value: Vec<i64>,
     },
+
+}
+
+
+#[derive(PartialEq,Clone,Debug)]
+pub enum NameLessValue {
+    Byte(i8),
+    Short(i16),
+    Int(i32),
+    Long(i64),
+    Float(f32),
+    Double(f64),
+    ByteArray(Vec<u8>),
+    String(String),
+    List(Vec<NameLessValue>),
+    Compound(Vec<Value>),
+    IntArray(Vec<i32>),
+    LongArray(Vec<i64>),
 
 }
