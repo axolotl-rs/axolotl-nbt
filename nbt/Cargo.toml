@@ -7,13 +7,13 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.19.2", features = ["io-util"], optional = true }
-async-compression = { version = "0.3.14", optional = true, features = ["all-algorithms", "tokio"] }
-flate2 = { version = "1.0.24", optional = true }
-byteorder = "1.4.3"
-async-recursion = "1.0.0"
+byteorder = { version = "1.4.3" }
+async-recursion = { version = "1.0.0", optional = true }
 [features]
-async_io = ["tokio", "async-compression/tokio", "async-compression/all-algorithms"]
+async_io = ["tokio", "async-recursion"]
 io = []
 value = []
 [dev-dependencies]
-tokio = {version = "1.19.2", features = ["full"]}
+tokio = { version = "1.19.2", features = ["full"] }
+async-compression = { version = "0.3.14", features = ["all-algorithms", "tokio"] }
+flate2 = { version = "1.0.24" }

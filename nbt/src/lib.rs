@@ -1,23 +1,26 @@
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
-
+#[cfg(feature = "value")]
 pub mod value;
-mod tokio_impl;
-#[derive(PartialEq, Debug)]
+#[cfg(feature = "tokio")]
+pub mod tokio_impl;
+
+#[derive(PartialEq, Debug, Clone)]
 pub enum Tag {
-    End,
-    Byte,
-    Short,
-    Int,
-    Long,
-    Float,
-    Double,
-    ByteArray,
-    String,
-    List,
-    Compound,
-    IntArray,
-    LongArray,
+    End = 0,
+    Byte = 1,
+    Short = 2,
+    Int = 3,
+    Long = 4,
+    Float = 5,
+    Double = 6,
+    ByteArray = 7,
+    String = 8,
+    List = 9,
+    Compound = 10,
+    IntArray = 11,
+    LongArray = 12,
 }
 
 impl Tag {
@@ -48,7 +51,21 @@ pub struct Binary;
 
 impl NBTFormat for Binary {}
 
-pub struct NBTReader<Type: NBTFormat, Src> {
+#[derive(Debug)]
+pub struct NBTReader<Type: NBTFormat, Src: Debug> {
     src: Src,
     phantom: PhantomData<Type>,
 }
+
+impl<Type: NBTFormat, Src: Debug> NBTReader<Type, Src> {
+    pub fn new(src: Src) -> Self {
+        NBTReader {
+            src,
+            phantom: PhantomData,
+        }
+    }
+    pub fn into_inner(self) -> Src {
+        self.src
+    }
+}
+
