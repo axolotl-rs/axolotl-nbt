@@ -1,0 +1,16 @@
+[package]
+name = "axolotl-nbt"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.19.2", features = ["io-util"], optional = true }
+async-compression = { version = "0.3.14", optional = true, features = ["all-algorithms", "tokio"] }
+flate2 = { version = "1.0.24", optional = true }
+byteorder = "1.4.3"
+[features]
+async_io = ["tokio", "async-compression/tokio", "async-compression/all-algorithms"]
+io = []
+value = []
