@@ -15,7 +15,6 @@ pub struct ChunkHeader {
     pub compression_type: CompressionType,
 }
 
-
 #[derive(Debug, Clone)]
 pub enum CompressionType {
     Gzip,
@@ -38,7 +37,6 @@ impl From<u8> for CompressionType {
 pub trait ChunkSection {
     fn into(self) -> (u32, u8);
 }
-
 
 impl ChunkSection for (u32, u8) {
     fn into(self) -> (u32, u8) {

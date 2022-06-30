@@ -1,16 +1,18 @@
+use crate::{Binary, NBTReader, Tag};
+use byteorder::{BigEndian, ReadBytesExt};
 use std::fmt::Debug;
 use std::io::{BufRead, Error, Read};
-use byteorder::{BigEndian, ReadBytesExt};
-use crate::{Binary, NBTReader, Tag};
 
 impl<R: BufRead + Debug> NBTReader<Binary, R> {
     /// Uses a Fill Buf to read the next tag id without moving the cursor.
     pub fn peak_tag_id(&mut self) -> Result<Tag, Error> {
         let result = self.src.fill_buf()?[0];
-        Tag::from_u8(result).ok_or_else(|| Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!("Invalid Tag Id {}", result),
-        ))
+        Tag::from_u8(result).ok_or_else(|| {
+            Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid Tag Id {}", result),
+            )
+        })
     }
 }
 
@@ -23,18 +25,22 @@ impl<R: Read + Debug> NBTReader<Binary, R> {
     }
     pub fn read_tag_id(&mut self) -> Result<Tag, Error> {
         let result = self.src.read_u8()?;
-        Tag::from_u8(result).ok_or_else(|| Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!("Invalid Tag Id {}", result),
-        ))
+        Tag::from_u8(result).ok_or_else(|| {
+            Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid Tag Id {}", result),
+            )
+        })
     }
     /// Will be zero if the tag is an end tag.
     pub fn read_tag_id_with_id_len(&mut self) -> Result<(Tag, u16), Error> {
         let result = self.src.read_u8()?;
-        let tag = Tag::from_u8(result).ok_or_else(|| Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!("Invalid Tag Id {}", result),
-        ))?;
+        let tag = Tag::from_u8(result).ok_or_else(|| {
+            Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid Tag Id {}", result),
+            )
+        })?;
         if tag == Tag::End {
             return Ok((tag, 0));
         }
@@ -45,7 +51,6 @@ impl<R: Read + Debug> NBTReader<Binary, R> {
         let result = self.src.read_u16::<BigEndian>()?;
         Ok(result)
     }
-
 
     pub fn read_byte(&mut self) -> Result<i8, Error> {
         let result = self.src.read_i8()?;

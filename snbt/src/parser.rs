@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use logos::Lexer;
-use serde::de::Unexpected::Option;
 use crate::{Error, NameLessValue, Token, Value};
+use logos::Lexer;
+
+
 
 pub fn parse(mut lex: Lexer<Token>) -> Result<Value, Error> {
     if let Some(token) = lex.next() {
@@ -13,9 +13,7 @@ pub fn parse(mut lex: Lexer<Token>) -> Result<Value, Error> {
                     value,
                 })
             }
-            _ => {
-                Err(Error::UnexpectedToken(token.clone()))
-            }
+            _ => Err(Error::UnexpectedToken(token)),
         }
     } else {
         Ok(Value::End)
@@ -29,22 +27,34 @@ pub fn parse_compound(lex: &mut Lexer<Token>) -> Result<Vec<Value>, Error> {
         match token {
             Token::ByteArray => {
                 let value = parse_byte_array(lex)?;
-                values.push(Value::ByteArray { name: last_name.ok_or(Error::MissingName)?, value });
+                values.push(Value::ByteArray {
+                    name: last_name.ok_or(Error::MissingName)?,
+                    value,
+                });
                 last_name = None;
             }
             Token::IntArray => {
                 let value = parse_int_array(lex)?;
-                values.push(Value::IntArray { name: last_name.ok_or(Error::MissingName)?, value });
+                values.push(Value::IntArray {
+                    name: last_name.ok_or(Error::MissingName)?,
+                    value,
+                });
                 last_name = None;
             }
             Token::LongArray => {
                 let value = parse_long_array(lex)?;
-                values.push(Value::LongArray { name: last_name.ok_or(Error::MissingName)?, value });
+                values.push(Value::LongArray {
+                    name: last_name.ok_or(Error::MissingName)?,
+                    value,
+                });
                 last_name = None;
             }
             Token::StartList => {
                 let value = parse_list(lex)?;
-                values.push(Value::List { name: last_name.ok_or(Error::MissingName)?, value });
+                values.push(Value::List {
+                    name: last_name.ok_or(Error::MissingName)?,
+                    value,
+                });
                 last_name = None;
             }
             Token::EndListOrArray => {}
@@ -126,7 +136,7 @@ pub fn parse_compound(lex: &mut Lexer<Token>) -> Result<Vec<Value>, Error> {
     }
     Ok(values)
 }
-fn parse_list(lex: &mut Lexer<Token>) -> Result<Vec<NameLessValue>, Error>{
+fn parse_list(lex: &mut Lexer<Token>) -> Result<Vec<NameLessValue>, Error> {
     let mut values = Vec::new();
     while let Some(token) = lex.next() {
         match token {
@@ -173,11 +183,10 @@ fn parse_list(lex: &mut Lexer<Token>) -> Result<Vec<NameLessValue>, Error>{
         }
     }
     Ok(values)
-
 }
 fn parse_byte_array(lex: &mut Lexer<Token>) -> Result<Vec<i8>, Error> {
     let mut values = Vec::new();
-    while let Some(token) = lex.next() {
+    for token in lex.by_ref() {
         match token {
             Token::Byte(b) => {
                 values.push(b);
@@ -186,10 +195,10 @@ fn parse_byte_array(lex: &mut Lexer<Token>) -> Result<Vec<i8>, Error> {
                 break;
             }
             Token::Error => {
-                return Err(Error::UnexpectedToken(token.clone()));
+                return Err(Error::UnexpectedToken(token));
             }
             _ => {
-                return Err(Error::UnexpectedToken(token.clone()));
+                return Err(Error::UnexpectedToken(token));
             }
         }
     }
@@ -198,7 +207,7 @@ fn parse_byte_array(lex: &mut Lexer<Token>) -> Result<Vec<i8>, Error> {
 
 fn parse_int_array(lex: &mut Lexer<Token>) -> Result<Vec<i32>, Error> {
     let mut values = Vec::new();
-    while let Some(token) = lex.next() {
+    for token in lex.by_ref() {
         match token {
             Token::Int(i) => {
                 values.push(i);
@@ -207,10 +216,10 @@ fn parse_int_array(lex: &mut Lexer<Token>) -> Result<Vec<i32>, Error> {
                 break;
             }
             Token::Error => {
-                return Err(Error::UnexpectedToken(token.clone()));
+                return Err(Error::UnexpectedToken(token));
             }
             _ => {
-                return Err(Error::UnexpectedToken(token.clone()));
+                return Err(Error::UnexpectedToken(token));
             }
         }
     }
@@ -219,7 +228,7 @@ fn parse_int_array(lex: &mut Lexer<Token>) -> Result<Vec<i32>, Error> {
 
 fn parse_long_array(lex: &mut Lexer<Token>) -> Result<Vec<i64>, Error> {
     let mut values = Vec::new();
-    while let Some(token) = lex.next() {
+    for token in lex.by_ref() {
         match token {
             Token::Long(l) => {
                 values.push(l);
@@ -228,10 +237,10 @@ fn parse_long_array(lex: &mut Lexer<Token>) -> Result<Vec<i64>, Error> {
                 break;
             }
             Token::Error => {
-                return Err(Error::UnexpectedToken(token.clone()));
+                return Err(Error::UnexpectedToken(token));
             }
             _ => {
-                return Err(Error::UnexpectedToken(token.clone()));
+                return Err(Error::UnexpectedToken(token));
             }
         }
     }

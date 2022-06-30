@@ -1,6 +1,6 @@
+use crate::{Binary, NBTReader, Tag};
 use std::fmt::Debug;
 use std::io::Error;
-use crate::{Binary, NBTReader, Tag};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Value {
@@ -53,9 +53,7 @@ pub enum Value {
         name: String,
         value: Vec<i64>,
     },
-
 }
-
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum NameLessValue {
@@ -72,7 +70,6 @@ pub enum NameLessValue {
     Compound(Vec<Value>),
     IntArray(Vec<i32>),
     LongArray(Vec<i64>),
-
 }
 
 #[cfg(feature = "tokio")]

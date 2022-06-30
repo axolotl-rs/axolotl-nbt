@@ -1,11 +1,11 @@
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
-#[cfg(feature = "value")]
-pub mod value;
+pub mod sync;
 #[cfg(feature = "tokio")]
 pub mod tokio_impl;
-pub mod sync;
+#[cfg(feature = "value")]
+pub mod value;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Tag {
@@ -47,7 +47,6 @@ impl Tag {
 
 pub trait NBTFormat {}
 
-
 pub struct Binary;
 
 impl NBTFormat for Binary {}
@@ -69,4 +68,3 @@ impl<Type: NBTFormat, Src: Debug> NBTReader<Type, Src> {
         self.src
     }
 }
-

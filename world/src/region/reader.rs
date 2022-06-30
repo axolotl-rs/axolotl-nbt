@@ -7,12 +7,9 @@ pub struct RegionReader<Src: Debug> {
 
 impl<Src: Debug> RegionReader<Src> {
     pub fn new(src: Src) -> Self {
-        RegionReader {
-            src,
-        }
+        RegionReader { src }
     }
     pub fn into_inner(self) -> Src {
         self.src
     }
 }
-

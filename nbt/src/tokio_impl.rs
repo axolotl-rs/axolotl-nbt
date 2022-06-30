@@ -6,7 +6,7 @@ use tokio::io::{AsyncBufReadExt, AsyncReadExt};
 #[cfg(test)]
 pub mod test {
     use crate::{Binary, NBTReader};
-    use async_compression::tokio::bufread::{GzipDecoder};
+    use async_compression::tokio::bufread::GzipDecoder;
     use std::marker::PhantomData;
     use std::path::Path;
     use tokio::io::BufReader;
@@ -29,35 +29,42 @@ impl<Read: AsyncBufReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
     /// Uses a Fill Buf to read the next tag id without moving the cursor.
     pub async fn async_peak_tag_id(&mut self) -> Result<Tag, Error> {
         let result = self.src.fill_buf().await?[0];
-        Tag::from_u8(result).ok_or_else(|| Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!("Invalid Tag Id {}", result),
-        ))
+        Tag::from_u8(result).ok_or_else(|| {
+            Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid Tag Id {}", result),
+            )
+        })
     }
-
 }
 
 impl<Read: AsyncReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
     /// You will need to convert this to a String.
     pub async fn async_read_str_as_bytes(&mut self, size: u16) -> Result<Vec<u8>, Error> {
         let mut result = Vec::with_capacity(size as usize);
-        AsyncReadExt::take(&mut self.src, size as u64).read_to_end(&mut result).await?;
+        AsyncReadExt::take(&mut self.src, size as u64)
+            .read_to_end(&mut result)
+            .await?;
         Ok(result)
     }
     pub async fn async_read_tag_id(&mut self) -> Result<Tag, Error> {
         let result = self.src.read_u8().await?;
-        Tag::from_u8(result).ok_or_else(|| Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!("Invalid Tag Id {}", result),
-        ))
+        Tag::from_u8(result).ok_or_else(|| {
+            Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid Tag Id {}", result),
+            )
+        })
     }
     /// Will be zero if the tag is an end tag.
     pub async fn async_read_tag_id_with_id_len(&mut self) -> Result<(Tag, u16), Error> {
         let result = self.src.read_u8().await?;
-        let tag = Tag::from_u8(result).ok_or_else(|| Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!("Invalid Tag Id {}", result),
-        ))?;
+        let tag = Tag::from_u8(result).ok_or_else(|| {
+            Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid Tag Id {}", result),
+            )
+        })?;
         if tag == Tag::End {
             return Ok((tag, 0));
         }
@@ -68,7 +75,6 @@ impl<Read: AsyncReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
         let result = self.src.read_u16().await?;
         Ok(result)
     }
-
 
     pub async fn async_read_byte(&mut self) -> Result<i8, Error> {
         let result = self.src.read_i8().await?;
