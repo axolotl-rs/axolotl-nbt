@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 
 pub mod sync;
-#[cfg(feature = "tokio")]
+#[cfg(feature = "async_io")]
 pub mod tokio_impl;
 #[cfg(feature = "value")]
 pub mod value;
@@ -45,23 +45,16 @@ impl Tag {
     }
 }
 
-pub trait NBTFormat {}
-
-pub struct Binary;
-
-impl NBTFormat for Binary {}
 
 #[derive(Debug)]
-pub struct NBTReader<Type: NBTFormat, Src: Debug> {
+pub struct NBTReader<Src: Debug> {
     src: Src,
-    phantom: PhantomData<Type>,
 }
 
-impl<Type: NBTFormat, Src: Debug> NBTReader<Type, Src> {
+impl<Src: Debug> NBTReader<Src> {
     pub fn new(src: Src) -> Self {
         NBTReader {
             src,
-            phantom: PhantomData,
         }
     }
     pub fn into_inner(self) -> Src {

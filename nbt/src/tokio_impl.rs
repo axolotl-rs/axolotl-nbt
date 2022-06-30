@@ -1,11 +1,11 @@
-use crate::{Binary, NBTReader, Tag};
+use crate::{NBTReader, Tag};
 use std::fmt::Debug;
 use std::io::Error;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt};
 
 #[cfg(test)]
 pub mod test {
-    use crate::{Binary, NBTReader};
+    use crate::{ NBTReader};
     use async_compression::tokio::bufread::GzipDecoder;
     use std::marker::PhantomData;
     use std::path::Path;
@@ -18,14 +18,13 @@ pub mod test {
         let x = GzipDecoder::new(BufReader::new(reader));
         let mut reader = NBTReader {
             src: BufReader::new(x),
-            phantom: PhantomData::<Binary>::default(),
         };
         let value = reader.async_read_value().await.unwrap();
         println!("{:#?}", value);
     }
 }
 
-impl<Read: AsyncBufReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
+impl<Read: AsyncBufReadExt + Unpin + Send + Debug> NBTReader<Read> {
     /// Uses a Fill Buf to read the next tag id without moving the cursor.
     pub async fn async_peak_tag_id(&mut self) -> Result<Tag, Error> {
         let result = self.src.fill_buf().await?[0];
@@ -38,7 +37,7 @@ impl<Read: AsyncBufReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
     }
 }
 
-impl<Read: AsyncReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
+impl<Read: AsyncReadExt + Unpin + Send + Debug> NBTReader<Read> {
     /// You will need to convert this to a String.
     pub async fn async_read_str_as_bytes(&mut self, size: u16) -> Result<Vec<u8>, Error> {
         let mut result = Vec::with_capacity(size as usize);

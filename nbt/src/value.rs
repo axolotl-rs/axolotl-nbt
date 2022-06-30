@@ -1,4 +1,4 @@
-use crate::{Binary, NBTReader, Tag};
+use crate::{NBTReader, Tag};
 use std::fmt::Debug;
 use std::io::Error;
 
@@ -72,8 +72,8 @@ pub enum NameLessValue {
     LongArray(Vec<i64>),
 }
 
-#[cfg(feature = "tokio")]
-impl<Read: tokio::io::AsyncReadExt + Unpin + Send + Debug> NBTReader<Binary, Read> {
+#[cfg(feature = "async_io")]
+impl<Read: tokio::io::AsyncReadExt + Unpin + Send + Debug> NBTReader<Read> {
     pub async fn async_read_value(&mut self) -> Result<Value, Error> {
         let (tag, len) = self.async_read_tag_id_with_id_len().await?;
         if let Tag::End = tag {

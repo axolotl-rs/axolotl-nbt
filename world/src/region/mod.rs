@@ -1,4 +1,5 @@
 pub mod reader;
+#[cfg(feature="async_io")]
 pub mod tokio_impl;
 
 #[derive(Debug, Clone)]

@@ -1,9 +1,9 @@
-use crate::{Binary, NBTReader, Tag};
+use crate::{NBTReader, Tag};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::fmt::Debug;
 use std::io::{BufRead, Error, Read};
 
-impl<R: BufRead + Debug> NBTReader<Binary, R> {
+impl<R: BufRead + Debug> NBTReader<R> {
     /// Uses a Fill Buf to read the next tag id without moving the cursor.
     pub fn peak_tag_id(&mut self) -> Result<Tag, Error> {
         let result = self.src.fill_buf()?[0];
@@ -16,7 +16,7 @@ impl<R: BufRead + Debug> NBTReader<Binary, R> {
     }
 }
 
-impl<R: Read + Debug> NBTReader<Binary, R> {
+impl<R: Read + Debug> NBTReader<R> {
     /// You will need to convert this to a String.
     pub fn read_str_as_bytes(&mut self, size: u16) -> Result<Vec<u8>, Error> {
         let mut result = Vec::with_capacity(size as usize);
