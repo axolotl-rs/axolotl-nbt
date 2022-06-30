@@ -1,8 +1,6 @@
 use crate::{Error, NameLessValue, Token, Value};
 use logos::Lexer;
 
-
-
 pub fn parse(mut lex: Lexer<Token>) -> Result<Value, Error> {
     if let Some(token) = lex.next() {
         match token {

@@ -10,9 +10,8 @@ pub use value::{NameLessValue, Value};
 
 #[cfg(test)]
 mod tests {
-    
+
     use crate::to_value;
-    
 
     #[test]
     fn it_works() {

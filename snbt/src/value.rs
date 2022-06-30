@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 
-
 #[derive(PartialEq, Clone, Debug)]
 pub enum Value {
     End,
