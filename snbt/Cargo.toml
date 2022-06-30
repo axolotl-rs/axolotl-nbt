@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 serde = "1.0.137"
 logos = "0.12.1"
+thiserror = "1.0.31"

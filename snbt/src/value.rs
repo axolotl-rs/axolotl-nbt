@@ -52,6 +52,10 @@ pub enum Value {
         name: String,
         value: Vec<i64>,
     },
+    Boolean {
+        name: String,
+        value: bool,
+    },
 
 }
 
@@ -71,5 +75,6 @@ pub enum NameLessValue {
     Compound(Vec<Value>),
     IntArray(Vec<i32>),
     LongArray(Vec<i64>),
+    Bool(bool),
 }
 

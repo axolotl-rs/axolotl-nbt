@@ -29,13 +29,21 @@ fn tag_name(lex: &mut Lexer<Token>) -> Option<String> {
     let n = slice[..slice.len() - 1].to_string();
     Some(n)
 }
+
 fn float(lex: &mut Lexer<Token>) -> Option<f32> {
     let slice = lex.slice();
     let n: f32 = slice[..slice.len() - 1].parse().ok()?;
     Some(n)
 }
-#[derive(Logos, Debug, PartialEq)]
-enum Token {
+
+fn to_string(lex: &mut Lexer<Token>) -> Option<String> {
+    let slice = lex.slice();
+    let n = slice[1..slice.len() - 1].trim().to_string();
+    Some(n)
+}
+
+#[derive(Logos, Debug, Clone, PartialEq)]
+pub enum Token {
     #[token("[B;")]
     ByteArray,
     #[token("[I;")]
@@ -70,6 +78,9 @@ enum Token {
     False,
     #[regex(r"\w+:", tag_name)]
     TagName(String),
+    #[regex(r#""(?:[^"]|\\")*""#, to_string)]
+    #[regex(r#"'(?:[^']|\\')*'"#, to_string)]
+    String(String),
     #[token(",")]
     ArrayListCompoundSeparator,
     #[error]
