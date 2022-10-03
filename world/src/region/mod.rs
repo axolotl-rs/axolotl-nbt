@@ -1,11 +1,49 @@
+use std::fmt::Debug;
+
 pub mod reader;
-#[cfg(feature="async_io")]
+pub mod sync;
+#[cfg(feature = "async_io")]
 pub mod tokio_impl;
+
+#[derive(Debug)]
+pub struct RegionWriter<Src: Debug> {
+    pub(crate) src: Src,
+}
+
+impl<Src: Debug> RegionWriter<Src> {
+    pub fn new(src: Src) -> Self {
+        RegionWriter { src }
+    }
+    pub fn into_inner(self) -> Src {
+        self.src
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Copy)]
+pub struct RegionLocation(pub u32, pub u8);
+
+impl RegionLocation {
+    pub fn calc_offset(&self) -> u64 {
+        (self.0 * 4096) as u64
+    }
+}
+
+impl Into<(u32, u8)> for RegionLocation {
+    fn into(self) -> (u32, u8) {
+        (self.0, self.1)
+    }
+}
+
+impl From<(u32, u8)> for RegionLocation {
+    fn from((offset, sector_count): (u32, u8)) -> Self {
+        RegionLocation(offset, sector_count)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct RegionHeader {
     /// The regions offsets and sizes
-    pub locations: Vec<(u32, u8)>,
+    pub locations: Vec<RegionLocation>,
     /// The timestamps
     pub timestamps: Vec<u32>,
 }
@@ -32,15 +70,5 @@ impl From<u8> for CompressionType {
             2 => CompressionType::Zlib,
             _ => CompressionType::Custom(data),
         }
-    }
-}
-
-pub trait ChunkSection {
-    fn into(self) -> (u32, u8);
-}
-
-impl ChunkSection for (u32, u8) {
-    fn into(self) -> (u32, u8) {
-        self
     }
 }

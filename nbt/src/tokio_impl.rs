@@ -5,7 +5,7 @@ use tokio::io::{AsyncBufReadExt, AsyncReadExt};
 
 #[cfg(test)]
 pub mod test {
-    use crate::{ NBTReader};
+    use crate::NBTReader;
     use async_compression::tokio::bufread::GzipDecoder;
     use std::marker::PhantomData;
     use std::path::Path;

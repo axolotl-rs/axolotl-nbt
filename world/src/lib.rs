@@ -1,10 +1,9 @@
+use crate::region::RegionLocation;
+use std::mem::size_of;
+
 pub mod region;
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
+#[test]
+pub fn size() {
+    println!("{}", size_of::<RegionLocation>());
 }

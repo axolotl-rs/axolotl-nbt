@@ -45,7 +45,6 @@ impl Tag {
     }
 }
 
-
 #[derive(Debug)]
 pub struct NBTReader<Src: Debug> {
     src: Src,
@@ -53,9 +52,7 @@ pub struct NBTReader<Src: Debug> {
 
 impl<Src: Debug> NBTReader<Src> {
     pub fn new(src: Src) -> Self {
-        NBTReader {
-            src,
-        }
+        NBTReader { src }
     }
     pub fn into_inner(self) -> Src {
         self.src
