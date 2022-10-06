@@ -2,9 +2,10 @@ use axolotl_nbt::serde_impl;
 use axolotl_nbt::sync::{NBTReader, NBTWriter};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
+use std::io::BufReader;
 use std::path::Path;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SimplePlayer {
     level: i32,
     name: String,
@@ -21,7 +22,7 @@ impl Default for SimplePlayer {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ListTests {
     list: Vec<i32>,
     list2: Vec<i64>,
@@ -45,9 +46,9 @@ pub fn generic_compound() {
         std::fs::File::create(path).unwrap()
     };
     serde_impl::to_writer(&mut file, &player).unwrap();
-
-    let mut reader = NBTReader::new(std::fs::File::open(path).unwrap());
-    println!("{:?}", reader.read_value().unwrap());
+    drop(file);
+    let player: SimplePlayer = serde_impl::from_reader(&mut BufReader::new(File::open(path).unwrap())).unwrap();
+    println!("{:?}", player);
 }
 
 #[test]
@@ -69,11 +70,13 @@ pub fn test_lists() {
     };
     serde_impl::to_writer(&mut file, &tests).unwrap();
 
-    let mut reader = NBTReader::new(std::fs::File::open(path).unwrap());
-    println!("{:?}", reader.read_value().unwrap());
+    drop(file);
+    let data: ListTests = serde_impl::from_reader(&mut File::open(path).unwrap()).unwrap();
+    println!("{:?}", data);
+
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ComplexList {
     one: Vec<Vec<SimplePlayer>>,
     two: Vec<Vec<i8>>,
@@ -106,6 +109,7 @@ pub fn complex_list() {
     };
     serde_impl::to_writer(&mut file, &tests).unwrap();
 
-    let mut reader = NBTReader::new(std::fs::File::open(path).unwrap());
-    println!("{:?}", reader.read_value().unwrap());
+    drop(file);
+    let data: ComplexList = serde_impl::from_reader(&mut File::open(path).unwrap()).unwrap();
+    println!("{:?}", data);
 }
