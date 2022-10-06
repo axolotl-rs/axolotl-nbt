@@ -1,4 +1,7 @@
-use crate::Tag;
+use crate::serde_impl::deserializer::NBTDeserializer;
+use crate::serde_impl::serialize::NBTSerializer;
+use crate::sync::NBTWriter;
+use crate::{NBTError, Tag};
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use std::fmt::{Debug, Display};
 use std::io::{BufRead, Read, Write};
@@ -19,12 +22,14 @@ pub enum Error {
     UnrepresentableValueError(&'static str),
     #[error("Key must be a string")]
     KeyMustBeString,
+    #[error(transparent)]
+    NBTErr(#[from] NBTError),
 }
 
 impl serde::de::Error for Error {
     fn custom<T>(msg: T) -> Self
-        where
-            T: Display,
+    where
+        T: Display,
     {
         Self::Custom(format!("{}", msg))
     }
@@ -32,8 +37,8 @@ impl serde::de::Error for Error {
 
 impl serde::ser::Error for Error {
     fn custom<T>(msg: T) -> Self
-        where
-            T: Display,
+    where
+        T: Display,
     {
         Self::Custom(format!("{}", msg))
     }
@@ -47,40 +52,13 @@ pub trait SerdeWriter: Write + WriteBytesExt + Debug {}
 
 impl<T: Write + WriteBytesExt + Debug> SerdeWriter for T {}
 
-#[cfg(test)]
-pub mod tests {
-    use std::path::Path;
-    use serde::{Deserialize, Serialize};
-    use crate::{NBTReader, NBTWriter};
-    use crate::serde_impl::serialize::NBTSerializer;
-
-    #[derive(Serialize, Deserialize)]
-    pub struct SimplePlayer {
-        level: i32,
-        name: String,
-        experience: f32,
-
-    }
-
-    #[test]
-    pub fn test_write() {
-        let player = SimplePlayer {
-            level: 1,
-            name: "KingTux".to_string(),
-            experience: 0.0
-        };
-        let path = Path::new("test2.nbt");
-        let file = if path.exists() {
-            std::fs::remove_file(path).unwrap();
-            std::fs::File::create(path).unwrap()
-        } else {
-            std::fs::File::create(path).unwrap()
-        };
-        let mut writer = NBTWriter::new(file);
-        let serializer = NBTSerializer { writer: &mut writer };
-        player.serialize(serializer).unwrap();
-
-        let mut reader = NBTReader::new(std::fs::File::open(path).unwrap());
-        println!("{:?}", reader.read_value());
-    }
+pub fn to_writer<W: SerdeWriter, T: serde::Serialize>(
+    writer: &mut W,
+    value: &T,
+) -> Result<(), Error> {
+    let mut nbt_writer = NBTWriter::new(writer);
+    let mut ser = NBTSerializer {
+        writer: &mut nbt_writer,
+    };
+    value.serialize(ser)
 }

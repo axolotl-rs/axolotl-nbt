@@ -2,8 +2,6 @@ use std::fmt::Debug;
 
 pub mod reader;
 pub mod sync;
-#[cfg(feature = "async_io")]
-pub mod tokio_impl;
 
 #[derive(Debug)]
 pub struct RegionWriter<Src: Debug> {

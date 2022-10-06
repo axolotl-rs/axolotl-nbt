@@ -1,11 +1,12 @@
 mod macros;
 mod named;
-mod ser_seq;
+pub mod sequence;
 
-use std::borrow::Cow;
 use crate::serde_impl::{Error, SerdeWriter};
-use crate::{NBTData, NBTWriter, Tag};
+use crate::Tag;
+use serde::ser::SerializeStructVariant;
 use serde::{ser, Serialize, Serializer};
+use std::borrow::Cow;
 use std::io::Write;
 
 #[derive(Debug)]
@@ -32,8 +33,9 @@ macro_rules! cast_and_write {
     };
 }
 use crate::serde_impl::serialize::macros::{gen_method_body, impossible, method_body};
-pub(crate) use cast_and_write;
 use crate::serde_impl::serialize::named::{NamedValueSerializer, StringOrSerializer};
+use crate::sync::{NBTData, NBTWriter};
+pub(crate) use cast_and_write;
 
 impl<'writer, W: SerdeWriter> Serializer for NBTSerializer<'writer, W> {
     type Ok = ();
@@ -48,7 +50,9 @@ impl<'writer, W: SerdeWriter> Serializer for NBTSerializer<'writer, W> {
     fn serialize_map(self, _: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
         Tag::Compound.write_to(&mut self.writer.target)?;
         "".write_to(&mut self.writer.target)?;
-        Ok(Compound { outer: self.writer })
+        Ok(Compound {
+            writer: self.writer,
+        })
     }
 
     fn serialize_struct(
@@ -58,7 +62,9 @@ impl<'writer, W: SerdeWriter> Serializer for NBTSerializer<'writer, W> {
     ) -> Result<Self::SerializeStruct, Self::Error> {
         Tag::Compound.write_to(&mut self.writer.target)?;
         name.write_to(&mut self.writer.target)?;
-        Ok(Compound { outer: self.writer })
+        Ok(Compound {
+            writer: self.writer,
+        })
     }
     impossible!(
         bool,
@@ -91,7 +97,7 @@ impl<'writer, W: SerdeWriter> Serializer for NBTSerializer<'writer, W> {
 }
 
 pub struct Compound<'writer, W: SerdeWriter> {
-    pub(crate) outer: &'writer mut NBTWriter<W>,
+    pub(crate) writer: &'writer mut NBTWriter<W>,
 }
 
 impl<'writer, W: SerdeWriter> ser::SerializeMap for Compound<'writer, W> {
@@ -99,15 +105,15 @@ impl<'writer, W: SerdeWriter> ser::SerializeMap for Compound<'writer, W> {
     type Error = Error;
 
     fn serialize_key<T: ?Sized>(&mut self, _key: &T) -> Result<(), Self::Error>
-        where
-            T: serde::Serialize,
+    where
+        T: serde::Serialize,
     {
         unimplemented!()
     }
 
     fn serialize_value<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error>
-        where
-            T: serde::Serialize,
+    where
+        T: serde::Serialize,
     {
         unimplemented!()
     }
@@ -117,20 +123,20 @@ impl<'writer, W: SerdeWriter> ser::SerializeMap for Compound<'writer, W> {
         key: &K,
         value: &V,
     ) -> Result<(), Self::Error>
-        where
-            K: Serialize,
-            V: Serialize,
+    where
+        K: Serialize,
+        V: Serialize,
     {
         let serializer = StringOrSerializer::Serializer(key);
         let mut serializer1 = NamedValueSerializer {
-            target: self.outer,
+            target: self.writer,
             name: serializer,
         };
         value.serialize(&mut serializer1)
     }
 
     fn end(self) -> Result<(), Self::Error> {
-        Tag::End.write_to(&mut self.outer.target)?;
+        Tag::End.write_to(&mut self.writer.target)?;
         Ok(())
     }
 }
@@ -144,109 +150,47 @@ impl<'writer, W: SerdeWriter> ser::SerializeStruct for Compound<'writer, W> {
         key: &'static str,
         value: &T,
     ) -> Result<(), Self::Error>
-        where
-            T: Serialize,
+    where
+        T: Serialize,
     {
-        let serializer: StringOrSerializer<'static, &str> = StringOrSerializer::String(Cow::Borrowed(key.as_bytes()));
+        let serializer: StringOrSerializer<'static, &str> =
+            StringOrSerializer::String(Cow::Borrowed(key.as_bytes()));
         let mut serializer1 = NamedValueSerializer {
-            target: self.outer,
+            target: self.writer,
             name: serializer,
         };
         value.serialize(&mut serializer1)
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        Tag::End.write_to(&mut self.outer.target)?;
+        Tag::End.write_to(&mut self.writer.target)?;
         Ok(())
     }
 }
 
-
-pub struct SimpleWrite<'writer, W: SerdeWriter> {
-    pub(crate) writer: &'writer mut NBTWriter<W>,
-}
-
-impl<'writer, W: SerdeWriter> Serializer for SimpleWrite<'writer, W> {
+impl<'writer, W: SerdeWriter> ser::SerializeStructVariant for Compound<'writer, W> {
     type Ok = ();
     type Error = super::Error;
-    type SerializeSeq = ser::Impossible<(), Self::Error>;
-    type SerializeTuple = ser::Impossible<(), Self::Error>;
-    type SerializeTupleStruct = ser::Impossible<(), Self::Error>;
-    type SerializeTupleVariant = ser::Impossible<(), Self::Error>;
-    type SerializeMap = Compound<'writer, W>;
-    type SerializeStruct = Compound<'writer, W>;
-    type SerializeStructVariant = ser::Impossible<(), Self::Error>;
 
-    fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
-        v.write_to(&mut self.writer.target)?;
+    fn serialize_field<T: ?Sized>(
+        &mut self,
+        key: &'static str,
+        value: &T,
+    ) -> Result<(), Self::Error>
+    where
+        T: Serialize,
+    {
+        let serializer: StringOrSerializer<'static, &str> =
+            StringOrSerializer::String(Cow::Borrowed(key.as_bytes()));
+        let mut serializer1 = NamedValueSerializer {
+            target: self.writer,
+            name: serializer,
+        };
+        value.serialize(&mut serializer1)
+    }
+
+    fn end(self) -> Result<Self::Ok, Self::Error> {
+        Tag::End.write_to(&mut self.writer.target)?;
         Ok(())
-    }
-
-    fn serialize_i8(self, v: i8) -> Result<Self::Ok, Self::Error> {
-        v.write_to(&mut self.writer.target)?;
-        Ok(())
-    }
-
-    fn serialize_i16(self, v: i16) -> Result<Self::Ok, Self::Error> {
-        v.write_to(&mut self.writer.target)?;
-        Ok(())
-    }
-
-    fn serialize_i32(self, v: i32) -> Result<Self::Ok, Self::Error> {
-        v.write_to(&mut self.writer.target)?;
-        Ok(())
-    }
-
-    fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error> {
-        v.write_to(&mut self.writer.target)?;
-        Ok(())
-    }
-
-    cast_and_write!();
-
-    fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
-        v.write_to(&mut self.writer.target)?;
-        Ok(())
-    }
-
-    fn serialize_f64(self, v: f64) -> Result<Self::Ok, Self::Error> {
-        v.write_to(&mut self.writer.target)?;
-        Ok(())
-    }
-
-
-
-    impossible!(
-
-        none,
-        some,
-        char,
-        bytes,
-        unit,
-        unit_struct,
-        newtype_struct,
-        newtype_variant,
-        tuple,
-        tuple_struct,
-        tuple_variant,
-        struct_variant,
-        unit_variant
-
-    );
-
-    fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
-        todo!()
-    }
-
-    fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-        todo!()
-    }
-
-    fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
-        todo!()
-    }
-
-    fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct, Self::Error> {
-        todo!()
     }
 }

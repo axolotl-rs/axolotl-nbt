@@ -1,22 +1,21 @@
+use crate::sync::NBTReader;
 use crate::value::{NameLessValue, Value};
-use crate::{NBTReader, Tag};
+use crate::{NBTError, Tag};
 use byteorder::ByteOrder;
 use std::fmt::Debug;
-use std::io::{Error, Read};
+use std::io::Read;
 
 impl<Reader: Read + Debug> NBTReader<Reader> {
-    pub fn read_value(&mut self) -> Result<Value, Error> {
+    pub fn read_value(&mut self) -> Result<Value, NBTError> {
         let (tag, len) = self.read_tag_id_with_id_len()?;
         if let Tag::End = tag {
             return Ok(Value::End);
         }
         let name = self.read_str_as_bytes(len)?;
-        let name = String::from_utf8(name)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-
+        let name = String::from_utf8(name)?;
         self.value_inner(tag, name)
     }
-    pub(crate) fn value_inner(&mut self, tag: Tag, name: String) -> Result<Value, Error> {
+    pub(crate) fn value_inner(&mut self, tag: Tag, name: String) -> Result<Value, NBTError> {
         match tag {
             Tag::Byte => {
                 let value = self.read_byte()?;
@@ -45,8 +44,7 @@ impl<Reader: Read + Debug> NBTReader<Reader> {
             Tag::String => {
                 let len = self.read_string_len()?;
                 let value = self.read_str_as_bytes(len)?;
-                let value = String::from_utf8(value)
-                    .map_err(|e| Error::new(std::io::ErrorKind::InvalidData, e))?;
+                let value = String::from_utf8(value)?;
                 Ok(Value::String { name, value })
             }
             Tag::Compound => {
@@ -62,8 +60,7 @@ impl<Reader: Read + Debug> NBTReader<Reader> {
 
                     let name = self.read_str_as_bytes(name_len)?;
 
-                    let name = String::from_utf8(name)
-                        .map_err(|e| Error::new(std::io::ErrorKind::InvalidData, e))?;
+                    let name = String::from_utf8(name)?;
                     let value = self.value_inner(tag, name)?;
                     values.push(value);
                 }
@@ -109,13 +106,12 @@ impl<Reader: Read + Debug> NBTReader<Reader> {
                     value: values,
                 })
             }
-            Tag::End => Err(Error::new(
-                std::io::ErrorKind::InvalidData,
-                "end tag not allowed",
-            )),
+            Tag::End => {
+                return Err(NBTError::UnexpectedEnd);
+            }
         }
     }
-    fn read_nameless(&mut self, tag: &Tag) -> Result<NameLessValue, Error> {
+    fn read_nameless(&mut self, tag: &Tag) -> Result<NameLessValue, NBTError> {
         match &tag {
             Tag::End => Ok(NameLessValue::End),
             Tag::Byte => {
@@ -150,8 +146,7 @@ impl<Reader: Read + Debug> NBTReader<Reader> {
             Tag::String => {
                 let len = self.read_string_len()?;
                 let value = self.read_str_as_bytes(len)?;
-                let value = String::from_utf8(value)
-                    .map_err(|e| Error::new(std::io::ErrorKind::InvalidData, e))?;
+                let value = String::from_utf8(value)?;
                 Ok(NameLessValue::String(value))
             }
             Tag::List => {
@@ -171,8 +166,7 @@ impl<Reader: Read + Debug> NBTReader<Reader> {
                         return Ok(NameLessValue::Compound(values));
                     }
                     let name = self.read_str_as_bytes(name_len)?;
-                    let name = String::from_utf8(name)
-                        .map_err(|e| Error::new(std::io::ErrorKind::InvalidData, e))?;
+                    let name = String::from_utf8(name)?;
                     let value = self.value_inner(tag, name)?;
                     values.push(value);
                 }

@@ -1,11 +1,6 @@
-pub mod sync;
-
-#[cfg(feature = "async_io")]
-pub mod tokio;
-
-use crate::{NBTReader, Tag};
+use crate::sync::NBTData;
+use crate::Tag;
 use std::fmt::Debug;
-use std::io::Error;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Value {
@@ -75,4 +70,24 @@ pub enum NameLessValue {
     Compound(Vec<Value>),
     IntArray(Vec<i32>),
     LongArray(Vec<i64>),
+}
+
+impl NameLessValue {
+    pub fn tag(&self) -> Tag {
+        match self {
+            NameLessValue::End => Tag::End,
+            NameLessValue::Byte(_) => Tag::Byte,
+            NameLessValue::Short(_) => Tag::Short,
+            NameLessValue::Int(_) => Tag::Int,
+            NameLessValue::Long(_) => Tag::Long,
+            NameLessValue::Float(_) => Tag::Float,
+            NameLessValue::Double(_) => Tag::Double,
+            NameLessValue::ByteArray(_) => Tag::ByteArray,
+            NameLessValue::String(_) => Tag::String,
+            NameLessValue::List(_) => Tag::List,
+            NameLessValue::Compound(_) => Tag::Compound,
+            NameLessValue::IntArray(_) => Tag::IntArray,
+            NameLessValue::LongArray(_) => Tag::LongArray,
+        }
+    }
 }

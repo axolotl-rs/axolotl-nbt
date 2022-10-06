@@ -136,7 +136,7 @@ impl From<axolotl_nbt::value::Value> for Value {
                 value: value,
             },
             axolotl_nbt::value::Value::List { value, name } => Value::List {
-                name: name,
+                name,
                 value: value.into_iter().map(|v| v.into()).collect(),
             },
             axolotl_nbt::value::Value::Compound { value, name } => Value::Compound {

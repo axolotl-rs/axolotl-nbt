@@ -1,5 +1,6 @@
 use crate::serde_impl::{Error, SerdeReader};
-use crate::{NBTReader, Tag};
+use crate::sync::NBTReader;
+use crate::Tag;
 use byteorder::ReadBytesExt;
 use serde::de::{DeserializeSeed, MapAccess, SeqAccess, Visitor};
 use serde::{forward_to_deserialize_any, Deserializer};

@@ -1,8 +1,9 @@
-use crate::serde_impl::serialize::ser_seq::SerializeSeq;
 use crate::serde_impl::serialize::macros::{gen_method_body, impossible, method_body};
+use crate::serde_impl::serialize::sequence::SerializeSeq;
 use crate::serde_impl::serialize::{cast_and_write, Compound};
 use crate::serde_impl::{Error, SerdeWriter};
-use crate::{NBTData, NBTWriter, Tag};
+use crate::sync::{NBTData, NBTWriter};
+use crate::Tag;
 use serde::{ser, Serialize, Serializer};
 use std::borrow::Cow;
 
@@ -17,8 +18,11 @@ pub struct NamedValueSerializer<'writer, 'name: 'writer, W: SerdeWriter, K: Seri
     pub(crate) name: StringOrSerializer<'name, K>,
 }
 
-impl<'writer, 'name: 'writer, W: SerdeWriter, K: Serialize + ?Sized> NamedValueSerializer<'writer, 'name, W, K>
-    where 'writer: 'name {
+impl<'writer, 'name: 'writer, W: SerdeWriter, K: Serialize + ?Sized>
+    NamedValueSerializer<'writer, 'name, W, K>
+where
+    'writer: 'name,
+{
     #[inline]
     pub fn write<Data: NBTData>(&mut self, value: Data) -> Result<(), Error> {
         match &self.name {
@@ -65,7 +69,9 @@ impl<'writer, 'name: 'writer, W: SerdeWriter, K: Serialize + ?Sized> NamedValueS
 }
 
 impl<'writer, 'name: 'writer, W: SerdeWriter, K: Serialize + ?Sized> Serializer
-for &'writer mut NamedValueSerializer<'writer, 'name, W, K> where 'writer: 'name
+    for &'writer mut NamedValueSerializer<'writer, 'name, W, K>
+where
+    'writer: 'name,
 {
     type Ok = ();
     type Error = Error;
@@ -119,7 +125,6 @@ for &'writer mut NamedValueSerializer<'writer, 'name, W, K> where 'writer: 'name
         todo!("serialize_bytes")
     }
 
-
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
         if let Some(len) = len {
             Ok(SerializeSeq {
@@ -129,14 +134,17 @@ for &'writer mut NamedValueSerializer<'writer, 'name, W, K> where 'writer: 'name
                 length: len as i32,
             })
         } else {
-            Err(Error::UnrepresentableValueError("Unrepresentable value: sequence with unknown length"))
+            Err(Error::UnrepresentableValueError(
+                "Unrepresentable value: sequence with unknown length",
+            ))
         }
     }
 
-
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
         self.write_tag(Tag::Compound)?;
-        Ok(Compound { outer: self.target })
+        Ok(Compound {
+            writer: self.target,
+        })
     }
 
     fn serialize_struct(
@@ -145,11 +153,12 @@ for &'writer mut NamedValueSerializer<'writer, 'name, W, K> where 'writer: 'name
         len: usize,
     ) -> Result<Self::SerializeStruct, Self::Error> {
         self.write_tag(Tag::Compound)?;
-        Ok(Compound { outer: self.target })
+        Ok(Compound {
+            writer: self.target,
+        })
     }
 
     impossible!(
-
         none,
         some,
         unit,
@@ -160,7 +169,8 @@ for &'writer mut NamedValueSerializer<'writer, 'name, W, K> where 'writer: 'name
         tuple_struct,
         tuple_variant,
         struct_variant,
-        unit_variant);
+        unit_variant
+    );
 }
 
 #[derive(Debug)]
