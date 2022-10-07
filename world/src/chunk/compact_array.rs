@@ -1,4 +1,7 @@
+use std::fmt::Formatter;
 use std::ops::{BitAndAssign, BitOr, Shl};
+use serde::de::{SeqAccess, Visitor};
+use serde::Deserialize;
 
 #[derive(Debug, Clone)]
 pub struct CompactArray {
@@ -87,3 +90,4 @@ pub mod tests {
         println!("{:#066b}", (0u32, 1u32, 2u32).get())
     }
 }
+

@@ -6,6 +6,7 @@ use std::fmt::{Debug, Display};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::string::FromUtf8Error;
 use thiserror::Error;
+use crate::binary::Binary;
 
 mod deserializer;
 mod serialize;
@@ -92,3 +93,28 @@ pub fn from_buf_reader<
     };
     T::deserialize(&mut der)
 }
+
+pub fn from_reader_binary<'de, R: Read + Debug, T: serde::Deserialize<'de>>(
+    reader: R,
+) -> Result<T, Error> {
+    let mut der = NBTDeserializer::<BufReader<R>, Binary> {
+        src: BufReader::new(reader),
+        phantom: Default::default(),
+    };
+    T::deserialize(&mut der)
+}
+
+pub fn from_buf_reader_binary<
+    'de,
+    R: Read + BufRead + Debug,
+    T: serde::Deserialize<'de>,
+>(
+    reader: R,
+) -> Result<T, Error> {
+    let mut der = NBTDeserializer::<R, Binary> {
+        src: reader,
+        phantom: Default::default(),
+    };
+    T::deserialize(&mut der)
+}
+

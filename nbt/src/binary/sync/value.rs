@@ -9,11 +9,20 @@ use std::io::{Read, Write};
 
 impl NBTDataType<Binary> for Value {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
-        let tag = Tag::read(reader)?;
-        let tag_name = Binary::read_tag_name(reader)?;
+        #[cfg(feature = "log")]
+        log::trace!("Reading Tag");
+            let tag = Tag::read(reader)?;
+        if tag == Tag::End {
+            return Ok(Value::End);
+        }
+        #[cfg(feature = "log")]
+        log::trace!("Reading Name");
+            let tag_name = Binary::read_tag_name(reader)?;
+        #[cfg(feature = "log")]
+        log::debug!("Reading tag: {:?} Name: {:?}", tag, tag_name);
 
         match tag {
             Tag::End => {
@@ -54,8 +63,8 @@ impl NBTDataType<Binary> for Value {
             }
             Tag::String => {
                 let length = i16::read(reader)?;
-                let mut bytes = vec![0; length as usize];
-                reader.read_exact(&mut bytes).map_err(NBTError::IO)?;
+                let mut bytes = Vec::with_capacity(length as usize);
+                reader.take(length as u64).read_to_end(&mut bytes)?;
                 Ok(Value::String {
                     name: tag_name,
                     value: String::from_utf8(bytes).map_err(NBTError::NotAString)?,
@@ -207,8 +216,8 @@ impl NameLessValue {
             }
             Tag::String => {
                 let length = i16::read(reader)?;
-                let mut bytes = vec![0; length as usize];
-                reader.read_exact(&mut bytes).map_err(NBTError::IO)?;
+                let mut bytes = Vec::with_capacity(length as usize);
+                reader.take(length as u64).read_to_end(&mut bytes)?;
                 Ok(NameLessValue::String(
                     String::from_utf8(bytes).map_err(NBTError::NotAString)?,
                 ))
@@ -248,8 +257,8 @@ impl NameLessValue {
 
 impl NBTDataType<Binary> for NameLessValue {
     fn read<R: Read>(_reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         unimplemented!("Please use read(tag, reader) instead")
     }

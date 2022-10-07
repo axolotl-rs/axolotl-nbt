@@ -3,11 +3,14 @@ pub mod writer;
 use crate::region::reader::RegionReader;
 use crate::region::{ChunkHeader, CompressionType, RegionHeader, RegionLocation};
 use axolotl_nbt::value::Value;
-use axolotl_nbt::NBTDataType;
+use axolotl_nbt::{NBTDataType, serde_impl};
 use byteorder::{BigEndian, ReadBytesExt};
 use flate2::read::{GzDecoder, ZlibDecoder};
 use std::fmt::Debug;
-use std::io::{BufReader, Error, Read, Seek, SeekFrom};
+use std::io::{BufReader, Read, Seek, SeekFrom};
+use axolotl_nbt::binary::Binary;
+use crate::chunk::RawChunk;
+use crate::Error;
 
 impl<Reader: Read + ReadBytesExt + Debug> RegionReader<Reader> {
     pub fn read_region_header(&mut self) -> Result<RegionHeader, Error> {
@@ -69,6 +72,29 @@ impl<Reader: Read + ReadBytesExt + Seek + Debug> RegionReader<Reader> {
             .read_to_end(&mut data)?;
         Ok((result, data))
     }
+    pub fn read_chunk_to_raw_chunk(
+        &mut self,
+        location: RegionLocation,
+    ) -> Result<Option<(ChunkHeader, RawChunk)>, Error> {
+        let result = self.read_chunk_header(location)?;
+        if result.length == 0 {
+            return Ok(None);
+        }
+
+
+        let mut take = (&mut self.src).take((result.length - 1) as u64);
+        #[cfg(feature = "log")]
+        log::debug!("Compression Type {:?}", &result.compression_type);
+        let value = match &result.compression_type {
+            CompressionType::Gzip => serde_impl::from_buf_reader_binary(BufReader::new(GzDecoder::new(take)))?,
+            CompressionType::Zlib => serde_impl::from_buf_reader_binary(BufReader::new(ZlibDecoder::new(take)))?,
+            CompressionType::Uncompressed => serde_impl::from_buf_reader_binary(BufReader::new(take))?,
+            CompressionType::Custom(_) => {
+                return Err(Error::InvalidChunkHeader("compression_type"));
+            }
+        };
+        Ok(Some((result, value)))
+    }
     pub fn read_chunk_to_value(
         &mut self,
         location: RegionLocation,
@@ -78,16 +104,16 @@ impl<Reader: Read + ReadBytesExt + Seek + Debug> RegionReader<Reader> {
             return Ok((result, Value::End));
         }
 
+
         let mut take = (&mut self.src).take((result.length - 1) as u64);
+        #[cfg(feature = "log")]
+        log::debug!("Compression Type {:?}", &result.compression_type);
         let value = match &result.compression_type {
             CompressionType::Gzip => Value::read(&mut GzDecoder::new(take))?,
             CompressionType::Zlib => Value::read(&mut ZlibDecoder::new(take))?,
             CompressionType::Uncompressed => Value::read(&mut take)?,
             CompressionType::Custom(_) => {
-                return Err(Error::new(
-                    std::io::ErrorKind::Other,
-                    "Custom compression not supported",
-                ));
+                return Err(Error::InvalidChunkHeader("compression_type"));
             }
         };
         Ok((result, value))
@@ -105,6 +131,7 @@ pub mod test {
 
     #[test]
     pub fn test() {
+        simple_log::quick!();
         let path =
             Path::new(r"C:\Users\wherk\Desktop\make_my_server\purpur\world\region\r.0.0.mca");
         let reader = File::open(path).unwrap();
@@ -114,21 +141,9 @@ pub mod test {
         assert_eq!(header.locations.len(), 1024);
         assert_eq!(header.timestamps.len(), 1024);
         for x in header.locations {
-            println!("Chunk Location: {:?}", x);
-            match reader.read_chunk_to_value(x) {
-                Ok((header, v)) => {
-                    println!("{:#?}", header);
-                    let string = format!("{:#?}", v);
-                    if string.contains("minecraft:warped_nylium") {
-                        println!("{:#?}", v);
-                        break;
-                    }
-                }
-                Err(e) => {
-                    println!("{:?}", e);
-                    continue;
-                }
-            };
+            println!("Chunk Location: {:#?}", x);
+            println!("{:?}", reader.read_chunk_to_raw_chunk(x).unwrap());
+            break;
         }
     }
 }

@@ -49,8 +49,10 @@ impl NBTType for Binary {
     #[inline]
     fn read_tag_name<R: Read>(reader: &mut R) -> Result<String, NBTError> {
         let length = reader.read_u16::<BigEndian>()?;
-        let mut string = vec![0u8; length as usize];
-        reader.read_exact(string.as_mut_slice())?;
+        #[cfg(feature = "log")]
+        log::debug!("Reading tag name with length {}", length);
+        let mut string = Vec::with_capacity(length as usize);
+        reader.take(length as u64).read_to_end(&mut string)?;
         String::from_utf8(string).map_err(NBTError::NotAString)
     }
 
@@ -83,11 +85,11 @@ pub struct BinaryListReader<'reader, R: Read> {
 }
 
 impl<'reader, Reader: Read> ListReader<'reader, Binary, Reader>
-    for BinaryListReader<'reader, Reader>
+for BinaryListReader<'reader, Reader>
 {
     fn new(reader: &'reader mut Reader, list_type: ListType) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         let length = reader.read_i32::<BigEndian>()?;
         Ok(Self {
@@ -98,8 +100,8 @@ impl<'reader, Reader: Read> ListReader<'reader, Binary, Reader>
     }
 
     fn new_generic_list(reader: &'reader mut Reader) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         let tag = Tag::read(reader)?;
         let length = reader.read_i32::<BigEndian>()?;
@@ -149,8 +151,8 @@ pub struct BinaryCompoundReader<'reader, R: Read> {
 
 impl<'reader, R: Read> CompoundReader<'reader, Binary, R> for BinaryCompoundReader<'reader, R> {
     fn new(reader: &'reader mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         Ok(Self {
             reader,
@@ -245,7 +247,11 @@ impl<'reader, R: Read> CompoundReader<'reader, Binary, R> for BinaryCompoundRead
             let value = Value::read(self.reader);
             match value {
                 Ok(ok) => {
-                    result.push(ok);
+                    if ok == Value::End {
+                        return Ok(result);
+                    } else {
+                        result.push(ok);
+                    }
                 }
                 Err(err) => {
                     return match err {
@@ -272,8 +278,8 @@ pub struct BinaryCompoundWriter<'writer, W: Write> {
 
 impl<'writer, W: Write> CompoundWriter<'writer, Binary, W> for BinaryCompoundWriter<'writer, W> {
     fn new(reader: &'writer mut W) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         Ok(Self { writer: reader })
     }
@@ -298,7 +304,7 @@ impl<'writer, W: Write> CompoundWriter<'writer, Binary, W> for BinaryCompoundWri
 }
 
 impl<'writer, Writer: Write> ListWriter<'writer, Binary, Writer>
-    for BinaryListWriter<'writer, Writer>
+for BinaryListWriter<'writer, Writer>
 {
     fn new<Name: AsRef<[u8]>>(
         reader: &'writer mut Writer,
@@ -306,8 +312,8 @@ impl<'writer, Writer: Write> ListWriter<'writer, Binary, Writer>
         list_type: ListType,
         name: Name,
     ) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         Self::write_sequence_header(reader, list_type, name, size)?;
         Ok(Self { writer: reader })
@@ -318,8 +324,8 @@ impl<'writer, Writer: Write> ListWriter<'writer, Binary, Writer>
         size: i32,
         list_type: ListType,
     ) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         Self::write_sub_sequence_header(reader, list_type, size)?;
         Ok(Self { writer: reader })
@@ -331,8 +337,8 @@ impl<'writer, Writer: Write> ListWriter<'writer, Binary, Writer>
         length_of_array: i32,
         name: Name,
     ) -> Result<(), NBTError>
-    where
-        Name: FnOnce(&mut W) -> Result<(), NBTError>,
+        where
+            Name: FnOnce(&mut W) -> Result<(), NBTError>,
     {
         match list_type {
             ListType::List(v) => {
