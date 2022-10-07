@@ -3,11 +3,11 @@ pub mod writer;
 use crate::region::reader::RegionReader;
 use crate::region::{ChunkHeader, CompressionType, RegionHeader, RegionLocation};
 use axolotl_nbt::value::Value;
-use axolotl_nbt::NBTReader;
 use byteorder::{BigEndian, ReadBytesExt};
 use flate2::read::{GzDecoder, ZlibDecoder};
 use std::fmt::Debug;
 use std::io::{BufReader, Error, Read, Seek, SeekFrom};
+use axolotl_nbt::NBTDataType;
 
 impl<Reader: Read + ReadBytesExt + Debug> RegionReader<Reader> {
     pub fn read_region_header(&mut self) -> Result<RegionHeader, Error> {
@@ -78,15 +78,15 @@ impl<Reader: Read + ReadBytesExt + Seek + Debug> RegionReader<Reader> {
             return Ok((result, Value::End));
         }
 
-        let take = (&mut self.src).take((result.length - 1) as u64);
+        let mut take = (&mut self.src).take((result.length - 1) as u64);
         let value = match &result.compression_type {
             CompressionType::Gzip => {
-                NBTReader::new(BufReader::new(GzDecoder::new(take))).read_value()?
+                Value::read(&mut GzDecoder::new(take))?
             }
             CompressionType::Zlib => {
-                NBTReader::new(BufReader::new(ZlibDecoder::new(take))).read_value()?
+                Value::read(&mut ZlibDecoder::new(take))?
             }
-            CompressionType::Uncompressed => NBTReader::new(BufReader::new(take)).read_value()?,
+            CompressionType::Uncompressed => Value::read(&mut take)?,
             CompressionType::Custom(_) => {
                 return Err(Error::new(
                     std::io::ErrorKind::Other,

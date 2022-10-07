@@ -4,7 +4,7 @@ pub mod sequence;
 
 use crate::serde_impl::Error;
 use crate::{NBTDataType, NBTType, Tag};
-use serde::ser::SerializeStructVariant;
+
 use serde::{ser, Serialize, Serializer};
 use std::borrow::Cow;
 use std::io::Write;

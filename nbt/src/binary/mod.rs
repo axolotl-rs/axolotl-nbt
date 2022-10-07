@@ -4,7 +4,7 @@ use crate::{
 };
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::fmt::Debug;
-use std::io::{BufRead, Read, Write};
+use std::io::{Read, Write};
 
 pub mod sync;
 
@@ -49,7 +49,7 @@ impl NBTType for Binary {
     #[inline]
     fn read_tag_name<R: Read>(reader: &mut R) -> Result<String, NBTError> {
         let length = reader.read_u16::<BigEndian>()?;
-        let mut string = vec![0u8; (length as usize)];
+        let mut string = vec![0u8; length as usize];
         reader.read_exact(string.as_mut_slice())?;
         String::from_utf8(string).map_err(NBTError::NotAString)
     }

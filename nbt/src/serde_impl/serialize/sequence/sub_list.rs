@@ -1,14 +1,14 @@
-use crate::binary::Binary;
+
 use crate::serde_impl::serialize::macros::{gen_method_body, impossible, method_body};
-use crate::serde_impl::serialize::named::{GetName, StringOrSerializer};
+
 use crate::serde_impl::serialize::{cast_and_write, Compound};
 use crate::serde_impl::Error;
 use crate::{NBTDataType, NBTType, Tag};
-use serde::{ser, Serialize, Serializer};
-use std::borrow::Cow;
-use std::fmt::Debug;
+use serde::{ser, Serialize};
+
+
 use std::io::Write;
-use std::mem;
+
 
 pub struct SubList<'writer, W: Write, Type: NBTType>
 where
@@ -112,11 +112,11 @@ where
     bool: NBTDataType<Type>,
 {
     #[inline]
-    fn parent(&mut self, tag: Tag) -> Result<(), Error> {
+    fn parent(&mut self, _tag: Tag) -> Result<(), Error> {
         todo!("parent")
     }
     #[inline]
-    pub fn write<Data: NBTDataType<Type>>(&mut self, data: Data) -> Result<(), Error> {
+    pub fn write<Data: NBTDataType<Type>>(&mut self, _data: Data) -> Result<(), Error> {
         todo!("write")
     }
 }
@@ -186,19 +186,19 @@ where
         self.write(v)
     }
 
-    fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
+    fn serialize_char(self, _v: char) -> Result<Self::Ok, Self::Error> {
         todo!()
     }
 
-    fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
+    fn serialize_str(self, _v: &str) -> Result<Self::Ok, Self::Error> {
         todo!("serialize_str")
     }
 
-    fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
+    fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
         todo!()
     }
 
-    fn serialize_seq(mut self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
+    fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
         self.parent(Tag::List)?;
 
         if let Some(len) = len {
@@ -221,7 +221,7 @@ where
         }
     }
 
-    fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
+    fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
         self.parent(Tag::Compound)?;
         if !self.wrote_header {
             Tag::Compound.write_alone(&mut self.outer)?;
@@ -236,8 +236,8 @@ where
 
     fn serialize_struct(
         self,
-        name: &'static str,
-        len: usize,
+        _name: &'static str,
+        _len: usize,
     ) -> Result<Self::SerializeStruct, Self::Error> {
         self.parent(Tag::Compound)?;
         if !self.wrote_header {

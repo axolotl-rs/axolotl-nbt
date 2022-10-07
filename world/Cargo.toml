@@ -8,6 +8,7 @@ license = "Apache-2.0"
 
 [dependencies]
 axolotl-nbt = { path = "../nbt", features = ["value"] }
+flate2 = { version = "1" }
 
 byteorder = { version = "1" }
 

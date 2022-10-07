@@ -1,9 +1,9 @@
 use crate::serde_impl::Error;
 use crate::{NBTDataType, NBTType, Tag};
-use byteorder::ReadBytesExt;
+
 use serde::de::{DeserializeSeed, MapAccess, SeqAccess, Visitor};
 use serde::{forward_to_deserialize_any, Deserializer};
-use std::fmt::Debug;
+
 use std::io::{BufRead, Read};
 use std::mem;
 
@@ -17,7 +17,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
 {
     type Error = super::Error;
 
-    fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
@@ -26,7 +26,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
 
     fn deserialize_unit_struct<V>(
         self,
-        name: &'static str,
+        _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -42,7 +42,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
 
     fn deserialize_newtype_struct<V>(
         self,
-        name: &'static str,
+        _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -71,8 +71,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
 
     fn deserialize_struct<V>(
         self,
-        name: &'static str,
-        fields: &'static [&'static str],
+        _name: &'static str,
+        _fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -105,7 +105,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> MapAccess<'de>
         Type::read_tag_name_raw(&mut self.reader, self.key.as_mut_slice())?;
 
         self.next_entry = Some(tag);
-        let mut inner = NameDeserializer {
+        let inner = NameDeserializer {
             content: &mut self.key,
         };
         seed.deserialize(inner).map(Some)
@@ -120,7 +120,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> MapAccess<'de>
                 "next_value_seed called before next_key_seed".to_string(),
             )),
             Some(value) => {
-                let mut inner = InnerDeserializer::<'_, Reader, Type> {
+                let inner = InnerDeserializer::<'_, Reader, Type> {
                     reader: self.reader,
                     tag: value,
                     phantom: Default::default(),
@@ -148,7 +148,7 @@ impl<'de, 'string> Deserializer<'de> for NameDeserializer<'string> {
     {
         visitor.visit_bytes(self.content)
     }
-    fn deserialize_str<V>(mut self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_str<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
@@ -286,7 +286,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
 
     fn deserialize_unit_struct<V>(
         self,
-        name: &'static str,
+        _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -297,7 +297,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
 
     fn deserialize_newtype_struct<V>(
         self,
-        name: &'static str,
+        _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -326,7 +326,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> SeqAccess<'de>
         if self.current == self.len {
             return Ok(None);
         }
-        let mut de = InnerDeserializer::<'_, Reader, Type> {
+        let de = InnerDeserializer::<'_, Reader, Type> {
             reader: &mut self.reader,
             tag: self.tag,
             phantom: Default::default(),

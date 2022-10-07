@@ -5,7 +5,7 @@ use crate::{
     Value,
 };
 use byteorder::{BigEndian, ReadBytesExt};
-use std::io::{BufRead, Read, Write};
+use std::io::{Read, Write};
 
 impl NBTDataType<Binary> for Value {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
@@ -247,7 +247,7 @@ impl NameLessValue {
 }
 
 impl NBTDataType<Binary> for NameLessValue {
-    fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
+    fn read<R: Read>(_reader: &mut R) -> Result<Self, NBTError>
     where
         Self: Sized,
     {
@@ -256,8 +256,8 @@ impl NBTDataType<Binary> for NameLessValue {
 
     fn write<W: Write, Name: AsRef<[u8]>>(
         self,
-        name: Name,
-        writer: &mut W,
+        _name: Name,
+        _writer: &mut W,
     ) -> Result<(), NBTError> {
         unimplemented!("Please use write_alone(writer) instead")
     }

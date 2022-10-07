@@ -1,9 +1,9 @@
 use crate::snbt::error::Error;
 
+use crate::snbt::parse::lexer::Token;
 use crate::value::NameLessValue;
 use crate::Value;
 use logos::Lexer;
-use crate::snbt::parse::lexer::Token;
 
 pub fn parse(mut lex: Lexer<Token>) -> Result<Value, Error> {
     if let Some(token) = lex.next() {

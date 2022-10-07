@@ -5,11 +5,11 @@ use crate::serde_impl::serialize::named::{GetName, StringOrSerializer};
 use crate::serde_impl::serialize::{cast_and_write, Compound};
 use crate::serde_impl::Error;
 use crate::{ListWriter, NBTDataType, NBTError, NBTType, Tag};
-use serde::{ser, Serialize, Serializer};
-use std::borrow::Cow;
-use std::fmt::Debug;
+use serde::{ser, Serialize};
+
+
 use std::io::Write;
-use std::mem;
+
 
 pub struct SerializeSeq<'writer, 'name: 'writer, W: Write, Type: NBTType, K: Serialize + ?Sized>
 where
@@ -245,19 +245,19 @@ where
         self.write(v)
     }
 
-    fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
+    fn serialize_char(self, _v: char) -> Result<Self::Ok, Self::Error> {
         todo!()
     }
 
-    fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
+    fn serialize_str(self, _v: &str) -> Result<Self::Ok, Self::Error> {
         todo!("serialize_str")
     }
 
-    fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
+    fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
         todo!()
     }
 
-    fn serialize_seq(mut self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
+    fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
         if let Some(len) = len {
             if !self.wrote_header {
                 Tag::List.write_alone(&mut self.outer)?;
@@ -279,7 +279,7 @@ where
         }
     }
 
-    fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
+    fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
         if !self.wrote_header {
             Tag::List.write_alone(&mut self.outer)?;
             self.write_name()?;
@@ -295,8 +295,8 @@ where
 
     fn serialize_struct(
         self,
-        name: &'static str,
-        len: usize,
+        _name: &'static str,
+        _len: usize,
     ) -> Result<Self::SerializeStruct, Self::Error> {
         if !self.wrote_header {
             Tag::List.write_alone(&mut self.outer)?;

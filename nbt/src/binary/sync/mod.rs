@@ -1,11 +1,9 @@
 use byteorder::{ReadBytesExt, WriteBytesExt};
-use std::fmt::Debug;
 
 use crate::binary::Binary;
 use crate::NBTError::InvalidTag;
 use crate::{ListType, NBTDataType, NBTError, NBTType, Tag};
 use byteorder::BigEndian;
-use std::hash::Hasher;
 use std::io::{Read, Write};
 
 #[cfg(feature = "value")]
@@ -51,35 +49,6 @@ impl NBTDataType<Binary> for Tag {
     }
 }
 
-#[deprecated]
-#[derive(Debug)]
-pub struct NBTReader<Src: Debug> {
-    pub(crate) src: Src,
-}
-
-impl<Src: Debug> NBTReader<Src> {
-    pub fn new(src: Src) -> Self {
-        NBTReader { src }
-    }
-    pub fn into_inner(self) -> Src {
-        self.src
-    }
-}
-
-#[deprecated]
-#[derive(Debug)]
-pub struct NBTWriter<Target: Debug> {
-    pub(crate) target: Target,
-}
-
-impl<Target: Debug> NBTWriter<Target> {
-    pub fn new(target: Target) -> Self {
-        NBTWriter { target }
-    }
-    pub fn into_inner(self) -> Target {
-        self.target
-    }
-}
 
 impl NBTDataType<Binary> for String {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>

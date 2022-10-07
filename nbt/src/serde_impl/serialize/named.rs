@@ -4,7 +4,7 @@ use crate::serde_impl::serialize::macros::{
 use crate::serde_impl::serialize::sequence::SerializeSeq;
 use crate::serde_impl::serialize::{cast_and_write, Compound};
 use crate::serde_impl::Error;
-use crate::{NBTDataType, NBTError, NBTType, Tag};
+use crate::{NBTDataType, NBTType, Tag};
 use serde::{ser, Serialize, Serializer};
 use std::borrow::Cow;
 use std::io::Write;
@@ -41,7 +41,7 @@ where
         }
     }
     #[inline]
-    pub fn write<Data: NBTDataType<Type>>(&mut self, value: Data) -> Result<(), Error> {
+    pub fn write<Data: NBTDataType<Type>>(&mut self, _value: Data) -> Result<(), Error> {
         todo!("write");
     }
     #[inline]
@@ -121,15 +121,15 @@ where
         self.write(v)
     }
 
-    fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
+    fn serialize_char(self, _v: char) -> Result<Self::Ok, Self::Error> {
         todo!()
     }
 
-    fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
+    fn serialize_str(self, _v: &str) -> Result<Self::Ok, Self::Error> {
         todo!("Get Around Borrow Checker")
     }
 
-    fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
+    fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
         todo!("serialize_bytes")
     }
 
@@ -149,7 +149,7 @@ where
         }
     }
 
-    fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
+    fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
         self.write_tag(Tag::Compound)?;
         Ok(Compound {
             writer: self.target,
@@ -159,8 +159,8 @@ where
 
     fn serialize_struct(
         self,
-        name: &'static str,
-        len: usize,
+        _name: &'static str,
+        _len: usize,
     ) -> Result<Self::SerializeStruct, Self::Error> {
         self.write_tag(Tag::Compound)?;
         Ok(Compound {
