@@ -1,49 +1,72 @@
+use crate::binary::Binary;
 use crate::serde_impl::serialize::macros::{gen_method_body, impossible, method_body};
 use crate::serde_impl::serialize::named::{GetName, StringOrSerializer};
 use crate::serde_impl::serialize::{cast_and_write, Compound};
-use crate::serde_impl::{Error, SerdeWriter};
-use crate::sync::{NBTData, NBTWriter};
-use crate::Tag;
+use crate::serde_impl::Error;
+use crate::{NBTDataType, NBTType, Tag};
 use serde::{ser, Serialize, Serializer};
 use std::borrow::Cow;
 use std::fmt::Debug;
+use std::io::Write;
 use std::mem;
 
-#[derive(Debug)]
-pub struct SubList<'writer, W: SerdeWriter> {
-    pub(crate) outer: &'writer mut NBTWriter<W>,
+pub struct SubList<'writer, W: Write, Type: NBTType>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
+    pub(crate) outer: &'writer mut W,
     pub(crate) wrote_header: bool,
 
     pub(crate) length: i32,
     pub(crate) wrote_parent_header: bool,
     pub(crate) parent_size: i32,
+    pub(crate) phantom: std::marker::PhantomData<Type>,
 }
 
-impl<'writer, W: SerdeWriter> ser::SerializeSeq for SubList<'writer, W> {
+impl<'writer, W: Write, Type: NBTType> ser::SerializeSeq for SubList<'writer, W, Type>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
     type Ok = ();
     type Error = super::Error;
 
     fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
-        where
-            T: Serialize,
+    where
+        T: Serialize,
     {
         if !self.wrote_header {
-            let mut inner = SerializeSeqInner {
+            let mut inner: SerializeSeqInner<'_, W, Type> = SerializeSeqInner {
                 outer: self.outer,
                 length: self.length,
                 wrote_header: false,
                 wrote_parent_header: self.wrote_parent_header,
                 parent_size: self.parent_size,
+                phantom: Default::default(),
             };
             value.serialize(&mut inner)?;
             self.wrote_header = true;
         } else {
-            let mut inner = SerializeSeqInner {
+            let mut inner: SerializeSeqInner<'_, W, Type> = SerializeSeqInner {
                 outer: self.outer,
                 length: self.length,
                 wrote_header: true,
                 wrote_parent_header: self.wrote_parent_header,
                 parent_size: self.parent_size,
+                phantom: Default::default(),
             };
             value.serialize(&mut inner)?;
         }
@@ -58,68 +81,66 @@ impl<'writer, W: SerdeWriter> ser::SerializeSeq for SubList<'writer, W> {
     }
 }
 
-pub struct SerializeSeqInner<'writer, W: SerdeWriter> {
-    pub(crate) outer: &'writer mut NBTWriter<W>,
+pub struct SerializeSeqInner<'writer, W: Write, Type: NBTType>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
+    pub(crate) outer: &'writer mut W,
     pub(crate) length: i32,
     pub(crate) wrote_header: bool,
     pub(crate) wrote_parent_header: bool,
     pub(crate) parent_size: i32,
+    pub(crate) phantom: std::marker::PhantomData<Type>,
 }
 
-impl<'writer, W: SerdeWriter> SerializeSeqInner<'writer, W> {
+impl<'writer, W: Write, Type: NBTType> SerializeSeqInner<'writer, W, Type>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
     #[inline]
     fn parent(&mut self, tag: Tag) -> Result<(), Error> {
-        if !self.wrote_parent_header {
-            match tag {
-                Tag::Byte => {
-                    Tag::ByteArray.write_to(&mut self.outer.target)?;
-                    self.parent_size.write_to(&mut self.outer.target)?;
-                }
-                Tag::Int => {
-                    Tag::IntArray.write_to(&mut self.outer.target)?;
-                    self.parent_size.write_to(&mut self.outer.target)?;
-                }
-                Tag::Long => {
-                    Tag::LongArray.write_to(&mut self.outer.target)?;
-                    self.parent_size.write_to(&mut self.outer.target)?;
-                }
-                _ => {
-                    Tag::List.write_to(&mut self.outer.target)?;
-                    self.parent_size.write_to(&mut self.outer.target)?;
-                }
-            }
-        }
-        Ok(())
+        todo!("parent")
     }
     #[inline]
-    pub fn write<Data: NBTData + Debug>(&mut self, data: Data) -> Result<(), Error> {
-        self.parent(Data::tag())?;
-        if !self.wrote_header {
-            match Data::tag() {
-                Tag::Byte | Tag::Int | Tag::Long => {
-                    self.length.write_to(&mut self.outer.target)?;
-                }
-                v => {
-                    v.write_to(&mut self.outer.target)?;
-                    self.length.write_to(&mut self.outer.target)?;
-                }
-            }
-        }
-        data.write_to(&mut self.outer.target)?;
-
-        Ok(())
+    pub fn write<Data: NBTDataType<Type>>(&mut self, data: Data) -> Result<(), Error> {
+        todo!("write")
     }
 }
 
-impl<'writer, W: SerdeWriter> ser::Serializer for &'writer mut SerializeSeqInner<'writer, W> {
+impl<'writer, W: Write, Type: NBTType> ser::Serializer
+    for &'writer mut SerializeSeqInner<'writer, W, Type>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
     type Ok = ();
     type Error = Error;
-    type SerializeSeq = SubList<'writer, W>;
+    type SerializeSeq = SubList<'writer, W, Type>;
     type SerializeTuple = ser::Impossible<(), Self::Error>;
     type SerializeTupleStruct = ser::Impossible<(), Self::Error>;
     type SerializeTupleVariant = ser::Impossible<(), Self::Error>;
-    type SerializeMap = Compound<'writer, W>;
-    type SerializeStruct = Compound<'writer, W>;
+    type SerializeMap = Compound<'writer, W, Type>;
+    type SerializeStruct = Compound<'writer, W, Type>;
     type SerializeStructVariant = ser::Impossible<(), Self::Error>;
 
     impossible!(
@@ -170,7 +191,7 @@ impl<'writer, W: SerdeWriter> ser::Serializer for &'writer mut SerializeSeqInner
     }
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
-        self.write(v)
+        todo!("serialize_str")
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
@@ -182,7 +203,7 @@ impl<'writer, W: SerdeWriter> ser::Serializer for &'writer mut SerializeSeqInner
 
         if let Some(len) = len {
             if !self.wrote_header {
-                Tag::List.write_to(&mut self.outer.target)?;
+                Tag::List.write_alone(&mut self.outer)?;
             }
             let list = SubList {
                 outer: self.outer,
@@ -190,6 +211,7 @@ impl<'writer, W: SerdeWriter> ser::Serializer for &'writer mut SerializeSeqInner
                 wrote_parent_header: self.wrote_header,
                 parent_size: self.length,
                 length: len as i32,
+                phantom: Default::default(),
             };
             Ok(list)
         } else {
@@ -202,12 +224,13 @@ impl<'writer, W: SerdeWriter> ser::Serializer for &'writer mut SerializeSeqInner
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
         self.parent(Tag::Compound)?;
         if !self.wrote_header {
-            Tag::Compound.write_to(&mut self.outer.target)?;
-            self.length.write_to(&mut self.outer.target)?;
+            Tag::Compound.write_alone(&mut self.outer)?;
+            self.length.write_alone(&mut self.outer)?;
         }
 
         Ok(Compound {
             writer: &mut self.outer,
+            phantom: Default::default(),
         })
     }
 
@@ -218,12 +241,13 @@ impl<'writer, W: SerdeWriter> ser::Serializer for &'writer mut SerializeSeqInner
     ) -> Result<Self::SerializeStruct, Self::Error> {
         self.parent(Tag::Compound)?;
         if !self.wrote_header {
-            Tag::Compound.write_to(&mut self.outer.target)?;
-            self.length.write_to(&mut self.outer.target)?;
+            Tag::Compound.write_alone(&mut self.outer)?;
+            self.length.write_alone(&mut self.outer)?;
         }
 
         Ok(Compound {
             writer: &mut self.outer,
+            phantom: Default::default(),
         })
     }
 }

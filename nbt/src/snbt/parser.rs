@@ -1,4 +1,7 @@
-use crate::{Error, NameLessValue, Token, Value};
+use crate::snbt::error::Error;
+use crate::snbt::lexer::Token;
+use crate::value::NameLessValue;
+use crate::Value;
 use logos::Lexer;
 
 pub fn parse(mut lex: Lexer<Token>) -> Result<Value, Error> {
@@ -165,10 +168,10 @@ fn parse_list(lex: &mut Lexer<Token>) -> Result<Vec<NameLessValue>, Error> {
                 values.push(NameLessValue::Float(v));
             }
             Token::True => {
-                values.push(NameLessValue::Bool(true));
+                values.push(NameLessValue::Boolean(true));
             }
             Token::False => {
-                values.push(NameLessValue::Bool(false));
+                values.push(NameLessValue::Boolean(false));
             }
             Token::String(string) => {
                 values.push(NameLessValue::String(string));

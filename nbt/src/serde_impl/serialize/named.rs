@@ -1,11 +1,14 @@
-use crate::serde_impl::serialize::macros::{gen_method_body, impossible, method_body};
+use crate::serde_impl::serialize::macros::{
+    gen_method_body, impossible, method_body, name_impossible,
+};
 use crate::serde_impl::serialize::sequence::SerializeSeq;
 use crate::serde_impl::serialize::{cast_and_write, Compound};
-use crate::serde_impl::{Error, SerdeWriter};
-use crate::sync::{NBTData, NBTWriter};
-use crate::Tag;
+use crate::serde_impl::Error;
+use crate::{NBTDataType, NBTError, NBTType, Tag};
 use serde::{ser, Serialize, Serializer};
 use std::borrow::Cow;
+use std::io::Write;
+use std::marker::PhantomData;
 
 pub enum StringOrSerializer<'data, K: Serialize + ?Sized> {
     String(Cow<'data, [u8]>),
@@ -13,74 +16,79 @@ pub enum StringOrSerializer<'data, K: Serialize + ?Sized> {
     None,
 }
 
-pub struct NamedValueSerializer<'writer, 'name: 'writer, W: SerdeWriter, K: Serialize + ?Sized> {
-    pub(crate) target: &'writer mut NBTWriter<W>,
+pub struct NamedValueSerializer<
+    'writer,
+    'name: 'writer,
+    W: Write,
+    Type: NBTType,
+    K: Serialize + ?Sized,
+> {
+    pub(crate) target: &'writer mut W,
     pub(crate) name: StringOrSerializer<'name, K>,
+    pub(crate) phantom: std::marker::PhantomData<Type>,
 }
 
-impl<'writer, 'name: 'writer, W: SerdeWriter, K: Serialize + ?Sized>
-    NamedValueSerializer<'writer, 'name, W, K>
+impl<'writer, 'name: 'writer, W: Write, Type: NBTType, K: Serialize + ?Sized>
+    NamedValueSerializer<'writer, 'name, W, Type, K>
 where
     'writer: 'name,
 {
-    #[inline]
-    pub fn write<Data: NBTData>(&mut self, value: Data) -> Result<(), Error> {
-        match &self.name {
-            StringOrSerializer::String(name) => {
-                self.target.write_tag(name.as_ref(), value)?;
-            }
-            StringOrSerializer::Serializer(name) => {
-                Data::tag().write_to(&mut self.target.target)?;
-                let name_getter = GetName {
-                    target: self.target,
-                };
-                name.serialize(name_getter)?;
-                value.write_to(&mut self.target.target)?;
-            }
-            _ => {
-                Data::tag().write_to(&mut self.target.target)?;
-                0u16.write_to(&mut self.target.target)?;
-                value.write_to(&mut self.target.target)?;
-            }
+    pub fn new(target: &'writer mut W, name: StringOrSerializer<'name, K>) -> Self {
+        Self {
+            target,
+            name,
+            phantom: Default::default(),
         }
-        Ok(())
+    }
+    #[inline]
+    pub fn write<Data: NBTDataType<Type>>(&mut self, value: Data) -> Result<(), Error> {
+        todo!("write");
     }
     #[inline]
     pub fn write_tag(&mut self, value: Tag) -> Result<(), Error> {
         match &self.name {
             StringOrSerializer::String(name) => {
-                value.write_to(&mut self.target.target)?;
-                name.as_ref().write_to(&mut self.target.target)?;
+                value.write_alone(&mut self.target)?;
+                Type::write_tag_name(&mut self.target, name.as_ref())?;
             }
             StringOrSerializer::Serializer(name) => {
-                value.write_to(&mut self.target.target)?;
-                let name_getter = GetName {
+                value.write_alone(&mut self.target)?;
+                let name_getter: GetName<'_, W, Type> = GetName {
                     target: self.target,
+                    phantom: Default::default(),
                 };
                 name.serialize(name_getter)?;
             }
             _ => {
-                value.write_to(&mut self.target.target)?;
-                0u16.write_to(&mut self.target.target)?;
+                // TODO      value.write_to(&mut self.target)?;
+                // TODO     0u16.write_to(&mut self.target)?;
             }
         }
         Ok(())
     }
 }
 
-impl<'writer, 'name: 'writer, W: SerdeWriter, K: Serialize + ?Sized> Serializer
-    for &'writer mut NamedValueSerializer<'writer, 'name, W, K>
+impl<'writer, 'name: 'writer, W: Write, Type: NBTType, K: Serialize + ?Sized> Serializer
+    for &'writer mut NamedValueSerializer<'writer, 'name, W, Type, K>
 where
     'writer: 'name,
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = Error;
-    type SerializeSeq = SerializeSeq<'writer, 'name, W, K>;
+    type SerializeSeq = SerializeSeq<'writer, 'name, W, Type, K>;
     type SerializeTuple = ser::Impossible<(), Self::Error>;
     type SerializeTupleStruct = ser::Impossible<(), Self::Error>;
     type SerializeTupleVariant = ser::Impossible<(), Self::Error>;
-    type SerializeMap = Compound<'writer, W>;
-    type SerializeStruct = Compound<'writer, W>;
+    type SerializeMap = Compound<'writer, W, Type>;
+    type SerializeStruct = Compound<'writer, W, Type>;
     type SerializeStructVariant = ser::Impossible<(), Self::Error>;
 
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
@@ -118,7 +126,7 @@ where
     }
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
-        self.write(v)
+        todo!("Get Around Borrow Checker")
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
@@ -132,6 +140,7 @@ where
                 name: &mut self.name,
                 wrote_header: false,
                 length: len as i32,
+                phantom: Default::default(),
             })
         } else {
             Err(Error::UnrepresentableValueError(
@@ -144,6 +153,7 @@ where
         self.write_tag(Tag::Compound)?;
         Ok(Compound {
             writer: self.target,
+            phantom: Default::default(),
         })
     }
 
@@ -155,6 +165,7 @@ where
         self.write_tag(Tag::Compound)?;
         Ok(Compound {
             writer: self.target,
+            phantom: Default::default(),
         })
     }
 
@@ -174,11 +185,12 @@ where
 }
 
 #[derive(Debug)]
-pub struct GetName<'writer, W: SerdeWriter> {
-    pub(crate) target: &'writer mut NBTWriter<W>,
+pub struct GetName<'writer, W: Write, Type: NBTType> {
+    pub(crate) target: &'writer mut W,
+    pub(crate) phantom: PhantomData<Type>,
 }
 
-impl<'writer, W: SerdeWriter> Serializer for GetName<'writer, W> {
+impl<'writer, W: Write, Type: NBTType> Serializer for GetName<'writer, W, Type> {
     type Ok = ();
     type Error = Error;
     type SerializeSeq = ser::Impossible<Self::Ok, Self::Error>;
@@ -190,10 +202,10 @@ impl<'writer, W: SerdeWriter> Serializer for GetName<'writer, W> {
     type SerializeStructVariant = ser::Impossible<Self::Ok, Self::Error>;
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
-        v.write_to(&mut self.target.target)?;
+        Type::write_tag_name(self.target, v)?;
         Ok(())
     }
-    impossible!(
+    name_impossible!(
         bool,
         i8,
         i16,

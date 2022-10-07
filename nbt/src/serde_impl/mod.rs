@@ -1,7 +1,7 @@
+use crate::binary::sync::{NBTReader, NBTWriter};
+use crate::binary::Binary;
 use crate::serde_impl::deserializer::NBTDeserializer;
-use crate::serde_impl::serialize::NBTSerializer;
-use crate::sync::{NBTReader, NBTWriter};
-use crate::{NBTError, Tag};
+use crate::{NBTError, NBTType, Tag};
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use std::fmt::{Debug, Display};
 use std::io::{BufRead, BufReader, Read, Write};
@@ -13,7 +13,7 @@ mod serialize;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("Expected tag {0} got {1}")]
+    #[error("Expected tag {0:?} got {1:?}")]
     IncorrectTagError(Tag, Tag),
     #[error("{0}")]
     Custom(String),
@@ -31,8 +31,8 @@ pub enum Error {
 
 impl serde::de::Error for Error {
     fn custom<T>(msg: T) -> Self
-        where
-            T: Display,
+    where
+        T: Display,
     {
         Self::Custom(format!("{}", msg))
     }
@@ -40,48 +40,45 @@ impl serde::de::Error for Error {
 
 impl serde::ser::Error for Error {
     fn custom<T>(msg: T) -> Self
-        where
-            T: Display,
+    where
+        T: Display,
     {
         Self::Custom(format!("{}", msg))
     }
 }
-
-pub trait SerdeReader: Read + ReadBytesExt + Debug + BufRead {}
-
-impl<T: Read + ReadBytesExt + Debug + BufRead> SerdeReader for T {}
-
-pub trait SerdeWriter: Write + WriteBytesExt + Debug {}
-
-impl<T: Write + WriteBytesExt + Debug> SerdeWriter for T {}
-
-pub fn to_writer<W: SerdeWriter, T: serde::Serialize>(
+/*
+pub fn to_writer<Type: NBTType, W: Write, T: serde::Serialize>(
     writer: &mut W,
     value: &T,
 ) -> Result<(), Error> {
-    let mut nbt_writer = NBTWriter::new(writer);
-    let mut ser = NBTSerializer {
-        writer: &mut nbt_writer,
+    let mut ser: NBTSerializer<'_, W, Type> = NBTSerializer {
+        writer,
+        phantom: Default::default(),
     };
     value.serialize(ser)
-}
+}*/
 
-pub fn from_reader<'de, R: Read + Debug, T: serde::Deserialize<'de>>(
-    reader: &mut R,
+pub fn from_reader<'de, Type: NBTType, R: Read + Debug, T: serde::Deserialize<'de>>(
+    reader: R,
 ) -> Result<T, Error> {
-    let mut nbt_writer = NBTReader::new(BufReader::new(reader));
-    let mut der = NBTDeserializer {
-        src: nbt_writer,
+    let mut der = NBTDeserializer::<BufReader<R>, Type> {
+        src: BufReader::new(reader),
+        phantom: Default::default(),
     };
     T::deserialize(&mut der)
 }
 
-pub fn from_buf_reader<'de, R: SerdeReader, T: serde::Deserialize<'de>>(
-    reader: &mut BufReader<R>,
+pub fn from_buf_reader<
+    'de,
+    Type: NBTType,
+    R: Read + BufRead + Debug,
+    T: serde::Deserialize<'de>,
+>(
+    reader: R,
 ) -> Result<T, Error> {
-    let mut nbt_writer = NBTReader::new(reader);
-    let mut der = NBTDeserializer {
-        src: nbt_writer,
+    let mut der = NBTDeserializer::<R, Type> {
+        src: reader,
+        phantom: Default::default(),
     };
     T::deserialize(&mut der)
 }

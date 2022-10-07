@@ -156,10 +156,11 @@ macro_rules! impossible {
 macro_rules! name_impossible {
     ($($t:tt),*) => {
         $(
-            method_body!{Err(Error::KeyMustBeString), $t}
+            method_body!{Err(Self::Error::KeyMustBeString), $t}
         )*
     };
 }
 pub(crate) use gen_method_body;
 pub(crate) use impossible;
 pub(crate) use method_body;
+pub(crate) use name_impossible;

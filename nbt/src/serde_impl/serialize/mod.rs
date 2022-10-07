@@ -2,16 +2,26 @@ mod macros;
 mod named;
 pub mod sequence;
 
-use crate::serde_impl::{Error, SerdeWriter};
-use crate::Tag;
+use crate::serde_impl::Error;
+use crate::{NBTDataType, NBTType, Tag};
 use serde::ser::SerializeStructVariant;
 use serde::{ser, Serialize, Serializer};
 use std::borrow::Cow;
 use std::io::Write;
 
 #[derive(Debug)]
-pub struct NBTSerializer<'writer, W: SerdeWriter> {
-    pub(crate) writer: &'writer mut NBTWriter<W>,
+pub struct NBTSerializer<'writer, W: Write, Type: NBTType>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+{
+    pub(crate) writer: &'writer mut W,
+    pub(crate) phantom: std::marker::PhantomData<Type>,
 }
 macro_rules! cast_and_write {
     () => {
@@ -34,36 +44,47 @@ macro_rules! cast_and_write {
 }
 use crate::serde_impl::serialize::macros::{gen_method_body, impossible, method_body};
 use crate::serde_impl::serialize::named::{NamedValueSerializer, StringOrSerializer};
-use crate::sync::{NBTData, NBTWriter};
 pub(crate) use cast_and_write;
 
-impl<'writer, W: SerdeWriter> Serializer for NBTSerializer<'writer, W> {
+impl<'writer, W: Write, Type: NBTType> Serializer for NBTSerializer<'writer, W, Type>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
     type Ok = ();
     type Error = super::Error;
     type SerializeSeq = ser::Impossible<(), Self::Error>;
     type SerializeTuple = ser::Impossible<(), Self::Error>;
     type SerializeTupleStruct = ser::Impossible<(), Self::Error>;
     type SerializeTupleVariant = ser::Impossible<(), Self::Error>;
-    type SerializeMap = Compound<'writer, W>;
-    type SerializeStruct = Compound<'writer, W>;
+    type SerializeMap = Compound<'writer, W, Type>;
+    type SerializeStruct = Compound<'writer, W, Type>;
     type SerializeStructVariant = ser::Impossible<(), Self::Error>;
-    fn serialize_map(self, _: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
-        Tag::Compound.write_to(&mut self.writer.target)?;
-        "".write_to(&mut self.writer.target)?;
+    fn serialize_map(mut self, _: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
+        Tag::Compound.write_alone(&mut self.writer)?;
+        Type::write_tag_name(&mut self.writer, b"")?;
         Ok(Compound {
             writer: self.writer,
+            phantom: Default::default(),
         })
     }
 
     fn serialize_struct(
-        self,
+        mut self,
         name: &'static str,
         _: usize,
     ) -> Result<Self::SerializeStruct, Self::Error> {
-        Tag::Compound.write_to(&mut self.writer.target)?;
-        name.write_to(&mut self.writer.target)?;
+        Tag::Compound.write_alone(&mut self.writer)?;
+        Type::write_tag_name(&mut self.writer, name)?;
         Ok(Compound {
             writer: self.writer,
+            phantom: Default::default(),
         })
     }
     impossible!(
@@ -96,11 +117,31 @@ impl<'writer, W: SerdeWriter> Serializer for NBTSerializer<'writer, W> {
     );
 }
 
-pub struct Compound<'writer, W: SerdeWriter> {
-    pub(crate) writer: &'writer mut NBTWriter<W>,
+pub struct Compound<'writer, W: Write, Type: NBTType>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+{
+    pub(crate) writer: &'writer mut W,
+    pub(crate) phantom: std::marker::PhantomData<Type>,
 }
 
-impl<'writer, W: SerdeWriter> ser::SerializeMap for Compound<'writer, W> {
+impl<'writer, W: Write, Type: NBTType> ser::SerializeMap for Compound<'writer, W, Type>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
     type Ok = ();
     type Error = Error;
 
@@ -128,20 +169,28 @@ impl<'writer, W: SerdeWriter> ser::SerializeMap for Compound<'writer, W> {
         V: Serialize,
     {
         let serializer = StringOrSerializer::Serializer(key);
-        let mut serializer1 = NamedValueSerializer {
-            target: self.writer,
-            name: serializer,
-        };
+        let mut serializer1: NamedValueSerializer<'_, '_, W, Type, K> =
+            NamedValueSerializer::new(self.writer, serializer);
         value.serialize(&mut serializer1)
     }
 
-    fn end(self) -> Result<(), Self::Error> {
-        Tag::End.write_to(&mut self.writer.target)?;
+    fn end(mut self) -> Result<(), Self::Error> {
+        Tag::End.write_alone(&mut self.writer)?;
         Ok(())
     }
 }
 
-impl<'writer, W: SerdeWriter> ser::SerializeStruct for Compound<'writer, W> {
+impl<'writer, W: Write, Type: NBTType> ser::SerializeStruct for Compound<'writer, W, Type>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
     type Ok = ();
     type Error = super::Error;
 
@@ -155,20 +204,28 @@ impl<'writer, W: SerdeWriter> ser::SerializeStruct for Compound<'writer, W> {
     {
         let serializer: StringOrSerializer<'static, &str> =
             StringOrSerializer::String(Cow::Borrowed(key.as_bytes()));
-        let mut serializer1 = NamedValueSerializer {
-            target: self.writer,
-            name: serializer,
-        };
+        let mut serializer1: NamedValueSerializer<'_, '_, W, Type, &str> =
+            NamedValueSerializer::new(self.writer, serializer);
         value.serialize(&mut serializer1)
     }
 
-    fn end(self) -> Result<Self::Ok, Self::Error> {
-        Tag::End.write_to(&mut self.writer.target)?;
+    fn end(mut self) -> Result<Self::Ok, Self::Error> {
+        Tag::End.write_alone(&mut self.writer)?;
         Ok(())
     }
 }
 
-impl<'writer, W: SerdeWriter> ser::SerializeStructVariant for Compound<'writer, W> {
+impl<'writer, W: Write, Type: NBTType> ser::SerializeStructVariant for Compound<'writer, W, Type>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
     type Ok = ();
     type Error = super::Error;
 
@@ -182,15 +239,13 @@ impl<'writer, W: SerdeWriter> ser::SerializeStructVariant for Compound<'writer, 
     {
         let serializer: StringOrSerializer<'static, &str> =
             StringOrSerializer::String(Cow::Borrowed(key.as_bytes()));
-        let mut serializer1 = NamedValueSerializer {
-            target: self.writer,
-            name: serializer,
-        };
+        let mut serializer1: NamedValueSerializer<'_, '_, W, Type, &str> =
+            NamedValueSerializer::new(self.writer, serializer);
         value.serialize(&mut serializer1)
     }
 
-    fn end(self) -> Result<Self::Ok, Self::Error> {
-        Tag::End.write_to(&mut self.writer.target)?;
+    fn end(mut self) -> Result<Self::Ok, Self::Error> {
+        Tag::End.write_alone(&mut self.writer)?;
         Ok(())
     }
 }

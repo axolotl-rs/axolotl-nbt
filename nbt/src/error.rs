@@ -13,4 +13,6 @@ pub enum NBTError {
     NotAString(#[from] std::string::FromUtf8Error),
     #[error("Unexpected EOF")]
     UnexpectedEnd,
+    #[error("Invalid NBT data")]
+    KeyMustBeString,
 }

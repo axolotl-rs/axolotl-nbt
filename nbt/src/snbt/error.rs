@@ -1,5 +1,5 @@
-use crate::Token;
 use thiserror::Error;
+use crate::snbt::parse::lexer::Token;
 
 #[derive(Debug, Error)]
 pub enum Error {

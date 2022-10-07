@@ -1,4 +1,3 @@
-use crate::sync::NBTData;
 use crate::Tag;
 use std::fmt::Debug;
 
@@ -53,6 +52,10 @@ pub enum Value {
         name: String,
         value: Vec<i64>,
     },
+    Boolean {
+        name: String,
+        value: bool,
+    },
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -70,6 +73,7 @@ pub enum NameLessValue {
     Compound(Vec<Value>),
     IntArray(Vec<i32>),
     LongArray(Vec<i64>),
+    Boolean(bool),
 }
 
 impl NameLessValue {
@@ -88,6 +92,7 @@ impl NameLessValue {
             NameLessValue::Compound(_) => Tag::Compound,
             NameLessValue::IntArray(_) => Tag::IntArray,
             NameLessValue::LongArray(_) => Tag::LongArray,
+            NameLessValue::Boolean(_) => Tag::Byte,
         }
     }
 }

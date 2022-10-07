@@ -1,5 +1,5 @@
+use axolotl_nbt::binary::sync::{NBTReader, NBTWriter};
 use axolotl_nbt::serde_impl;
-use axolotl_nbt::sync::{NBTReader, NBTWriter};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
@@ -47,7 +47,8 @@ pub fn generic_compound() {
     };
     serde_impl::to_writer(&mut file, &player).unwrap();
     drop(file);
-    let player: SimplePlayer = serde_impl::from_reader(&mut BufReader::new(File::open(path).unwrap())).unwrap();
+    let player: SimplePlayer =
+        serde_impl::from_reader(&mut BufReader::new(File::open(path).unwrap())).unwrap();
     println!("{:?}", player);
 }
 
@@ -73,7 +74,6 @@ pub fn test_lists() {
     drop(file);
     let data: ListTests = serde_impl::from_reader(&mut File::open(path).unwrap()).unwrap();
     println!("{:?}", data);
-
 }
 
 #[derive(Serialize, Deserialize, Debug)]
