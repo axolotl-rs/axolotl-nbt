@@ -7,9 +7,7 @@ use crate::serde_impl::Error;
 use crate::{ListWriter, NBTDataType, NBTError, NBTType, Tag};
 use serde::{ser, Serialize};
 
-
 use std::io::Write;
-
 
 pub struct SerializeSeq<'writer, 'name: 'writer, W: Write, Type: NBTType, K: Serialize + ?Sized>
 where
@@ -21,6 +19,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     pub(crate) outer: &'writer mut W,
     pub(crate) name: &'name mut StringOrSerializer<'name, K>,
@@ -40,6 +39,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = super::Error;
@@ -84,7 +84,9 @@ pub struct SerializeSeqInner<
     W: Write,
     Type: NBTType,
     K: Serialize + ?Sized,
-> {
+> where
+    for<'str> &'str str: NBTDataType<Type>,
+{
     pub(crate) outer: &'writer mut W,
     pub(crate) name: &'name StringOrSerializer<'name, K>,
     pub(crate) length: i32,
@@ -94,6 +96,8 @@ pub struct SerializeSeqInner<
 
 impl<'writer, 'name: 'writer, W: Write, Type: NBTType, K: Serialize + ?Sized>
     SerializeSeqInner<'writer, 'name, W, Type, K>
+where
+    for<'str> &'str str: NBTDataType<Type>,
 {
     #[inline]
     pub fn write<Data: NBTDataType<Type>>(&mut self, data: Data) -> Result<(), Error> {
@@ -191,6 +195,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = Error;
@@ -246,15 +251,15 @@ where
     }
 
     fn serialize_char(self, _v: char) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        todo!("serialize_char")
     }
 
-    fn serialize_str(self, _v: &str) -> Result<Self::Ok, Self::Error> {
-        todo!("serialize_str")
+    fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
+        self.write(v)
     }
 
     fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        todo!("serialize_bytes")
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {

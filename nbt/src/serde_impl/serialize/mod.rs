@@ -19,6 +19,7 @@ where
     f32: NBTDataType<Type>,
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     pub(crate) writer: &'writer mut W,
     pub(crate) phantom: std::marker::PhantomData<Type>,
@@ -56,6 +57,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = super::Error;
@@ -126,6 +128,7 @@ where
     f32: NBTDataType<Type>,
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     pub(crate) writer: &'writer mut W,
     pub(crate) phantom: std::marker::PhantomData<Type>,
@@ -141,6 +144,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = Error;
@@ -190,6 +194,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = super::Error;
@@ -225,6 +230,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = super::Error;

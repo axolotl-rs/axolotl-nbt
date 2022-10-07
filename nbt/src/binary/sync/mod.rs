@@ -9,6 +9,35 @@ use std::io::{Read, Write};
 #[cfg(feature = "value")]
 pub mod value;
 
+impl NBTDataType<Binary> for bool {
+    fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
+    where
+        Self: Sized,
+    {
+        Ok(reader.read_u8()? != 0)
+    }
+
+    fn write<W: Write, Name: AsRef<[u8]>>(
+        self,
+        name: Name,
+        writer: &mut W,
+    ) -> Result<(), NBTError> {
+        Tag::Byte.write_alone(writer)?;
+        Binary::write_tag_name(writer, name)?;
+        writer.write_i8(if self { 1 } else { 0 })?;
+        Ok(())
+    }
+
+    fn write_alone<W: Write>(self, writer: &mut W) -> Result<(), NBTError> {
+        writer.write_u8(if self { 1 } else { 0 })?;
+        Ok(())
+    }
+
+    fn get_tag() -> Tag {
+        Tag::Byte
+    }
+}
+
 impl NBTDataType<Binary> for Tag {
     fn read_with_name<R: Read>(reader: &mut R) -> Result<(String, Self), NBTError>
     where
@@ -49,6 +78,34 @@ impl NBTDataType<Binary> for Tag {
     }
 }
 
+impl NBTDataType<Binary> for &str {
+    fn read<R: Read>(_: &mut R) -> Result<Self, NBTError>
+    where
+        Self: Sized,
+    {
+        unimplemented!("read str ref")
+    }
+
+    fn write<W: Write, Name: AsRef<[u8]>>(
+        self,
+        name: Name,
+        writer: &mut W,
+    ) -> Result<(), NBTError> {
+        Tag::String.write_alone(writer)?;
+        Binary::write_tag_name(writer, name)?;
+        writer.write_u16::<BigEndian>(self.len() as u16)?;
+        writer.write_all(self.as_ref()).map_err(NBTError::IO)
+    }
+
+    fn write_alone<W: Write>(self, writer: &mut W) -> Result<(), NBTError> {
+        writer.write_u16::<BigEndian>(self.len() as u16)?;
+        writer.write_all(self.as_ref()).map_err(NBTError::IO)
+    }
+
+    fn get_tag() -> Tag {
+        Tag::String
+    }
+}
 
 impl NBTDataType<Binary> for String {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
@@ -66,15 +123,11 @@ impl NBTDataType<Binary> for String {
         name: Name,
         writer: &mut W,
     ) -> Result<(), NBTError> {
-        Tag::String.write_alone(writer)?;
-        Binary::write_tag_name(writer, name)?;
-        writer.write_u16::<BigEndian>(self.len() as u16)?;
-        writer.write_all(self.as_ref()).map_err(NBTError::IO)
+        self.as_str().write(name, writer)
     }
 
     fn write_alone<W: Write>(self, writer: &mut W) -> Result<(), NBTError> {
-        writer.write_u16::<BigEndian>(self.len() as u16)?;
-        writer.write_all(self.as_ref()).map_err(NBTError::IO)
+        self.as_str().write_alone(writer)
     }
 
     fn get_tag() -> Tag {
@@ -248,38 +301,6 @@ impl NBTDataType<Binary> for f64 {
 
     fn get_tag() -> Tag {
         Tag::Double
-    }
-}
-
-impl NBTDataType<Binary> for bool {
-    fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
-    {
-        let val = i8::read(reader)?;
-        Ok(val != 0)
-    }
-
-    fn write<W: Write, Name: AsRef<[u8]>>(
-        self,
-        name: Name,
-        writer: &mut W,
-    ) -> Result<(), NBTError> {
-        Tag::Byte.write_alone(writer)?;
-        Binary::write_tag_name(writer, name)?;
-        writer
-            .write_i8(if self { 1 } else { 0 })
-            .map_err(NBTError::IO)
-    }
-
-    fn write_alone<W: Write>(self, writer: &mut W) -> Result<(), NBTError> {
-        writer
-            .write_i8(if self { 1 } else { 0 })
-            .map_err(NBTError::IO)
-    }
-
-    fn get_tag() -> Tag {
-        Tag::Byte
     }
 }
 

@@ -175,8 +175,8 @@ impl NBTDataType<Binary> for Value {
                     writer.write_next_tag(i)?;
                 }
             }
-            Value::Boolean { .. } => {
-                todo!("Boolean is not supported in binary format");
+            Value::Boolean { name, value } => {
+                value.write(name, writer)?;
             }
         }
         Ok(())
@@ -340,8 +340,8 @@ impl NBTDataType<Binary> for NameLessValue {
                     writer.write_next_tag(i)?;
                 }
             }
-            NameLessValue::Boolean(_) => {
-                todo!("Boolean is not supported in binary format");
+            NameLessValue::Boolean(bool) => {
+                bool.write_alone(writer)?;
             }
         }
         Ok(())

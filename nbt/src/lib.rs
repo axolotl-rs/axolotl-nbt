@@ -1,6 +1,4 @@
-
-
-use std::fmt::{Debug};
+use std::fmt::Debug;
 use std::io::{Read, Write};
 
 pub mod binary;
@@ -11,7 +9,7 @@ pub mod snbt;
 #[cfg(feature = "value")]
 pub mod value;
 
-use crate::value::Value;
+use crate::value::{NameLessValue, Value};
 pub use error::NBTError;
 
 #[repr(i8)]
@@ -64,7 +62,7 @@ pub trait NBTType: Debug + Sized {
     fn read_tag_name<R: Read>(reader: &mut R) -> Result<String, NBTError>;
     /// Will read the tag name and the tag
 
-    fn read_tag_name_raw<R: Read>(reader: &mut R, value: &mut [u8]) -> Result<(), NBTError>;
+    fn read_tag_name_raw<R: Read>(reader: &mut R, value: &mut Vec<u8>) -> Result<(), NBTError>;
 
     /// Will Write the tag name then any separator
     /// Moving the cursor to the start of the value
@@ -122,9 +120,8 @@ pub trait ListReader<'reader, Type: NBTType + ?Sized, Reader: Read + 'reader> {
 
     fn read_next_tag<DataType: NBTDataType<Type>>(&mut self) -> Result<DataType, NBTError>;
 
-    fn read_all_bytes(&mut self) -> Result<Vec<u8>, NBTError>;
     #[cfg(feature = "value")]
-    fn read_next(&mut self) -> Result<Value, NBTError>;
+    fn read_next(&mut self) -> Result<NameLessValue, NBTError>;
 }
 
 pub trait CompoundReader<'reader, Type: NBTType, Reader: Read + 'reader> {

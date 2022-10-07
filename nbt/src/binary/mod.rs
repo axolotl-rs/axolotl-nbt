@@ -1,6 +1,6 @@
 use crate::{
     CompoundReader, CompoundWriter, ListReader, ListType, ListWriter, NBTDataType, NBTError,
-    NBTType, Tag, Value,
+    NBTType, NameLessValue, Tag, Value,
 };
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::fmt::Debug;
@@ -54,9 +54,9 @@ impl NBTType for Binary {
         String::from_utf8(string).map_err(NBTError::NotAString)
     }
 
-    fn read_tag_name_raw<R: Read>(reader: &mut R, value: &mut [u8]) -> Result<(), NBTError> {
+    fn read_tag_name_raw<R: Read>(reader: &mut R, value: &mut Vec<u8>) -> Result<(), NBTError> {
         let length = reader.read_u16::<BigEndian>()?;
-        reader.read_exact(&mut value[..length as usize])?;
+        reader.take(length as u64).read_to_end(value)?;
         Ok(())
     }
 
@@ -131,40 +131,14 @@ impl<'reader, Reader: Read> ListReader<'reader, Binary, Reader>
         DataType::read(self.reader)
     }
 
-    /// This will copy data into a new vector
-    fn read_all_bytes(&mut self) -> Result<Vec<u8>, NBTError> {
-        match self.tag {
-            ListType::ByteArray => {
-                let mut bytes = vec![0u8; self.length as usize];
-                self.reader.read_exact(bytes.as_mut_slice())?;
-                Ok(bytes)
-            }
-            ListType::IntArray => {
-                let mut bytes = vec![0u8; self.length as usize * 4];
-                self.reader.read_exact(bytes.as_mut_slice())?;
-                Ok(bytes)
-            }
-            ListType::LongArray => {
-                let mut bytes = vec![0u8; self.length as usize * 8];
-                self.reader.read_exact(bytes.as_mut_slice())?;
-                Ok(bytes)
-            }
-            ListType::List(tag) => {
-                let size = tag.get_size();
-                if size != 0 {
-                    let mut bytes = vec![0u8; self.length as usize * size];
-                    self.reader.read_exact(bytes.as_mut_slice())?;
-                    Ok(bytes)
-                } else {
-                    todo!("Reading all bytes of dynamic size is not yet implemented")
-                }
-            }
-        }
-    }
-
     #[cfg(feature = "value")]
-    fn read_next(&mut self) -> Result<Value, NBTError> {
-        todo!()
+    fn read_next(&mut self) -> Result<NameLessValue, NBTError> {
+        match self.tag {
+            ListType::ByteArray => Ok(NameLessValue::Byte(self.read_next_tag()?)),
+            ListType::IntArray => Ok(NameLessValue::Int(self.read_next_tag()?)),
+            ListType::LongArray => Ok(NameLessValue::Long(self.read_next_tag()?)),
+            ListType::List(v) => NameLessValue::read(v, self.reader),
+        }
     }
 }
 
@@ -266,11 +240,25 @@ impl<'reader, R: Read> CompoundReader<'reader, Binary, R> for BinaryCompoundRead
     }
     #[cfg(feature = "value")]
     fn read_to_end(self) -> Result<Vec<Value>, NBTError> {
-        todo!()
+        let mut result = Vec::new();
+        loop {
+            let value = Value::read(self.reader);
+            match value {
+                Ok(ok) => {
+                    result.push(ok);
+                }
+                Err(err) => {
+                    return match err {
+                        NBTError::UnexpectedEnd => Ok(result),
+                        err => Err(err),
+                    };
+                }
+            }
+        }
     }
     #[cfg(feature = "value")]
     fn read_next(&mut self) -> Result<Value, NBTError> {
-        todo!()
+        Value::read(self.reader)
     }
 }
 

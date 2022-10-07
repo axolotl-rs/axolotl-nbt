@@ -102,8 +102,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> MapAccess<'de>
         if Tag::End == tag {
             return Ok(None);
         }
-        Type::read_tag_name_raw(&mut self.reader, self.key.as_mut_slice())?;
-
+        self.key.clear();
+        Type::read_tag_name_raw(&mut self.reader, &mut self.key)?;
         self.next_entry = Some(tag);
         let inner = NameDeserializer {
             content: &mut self.key,

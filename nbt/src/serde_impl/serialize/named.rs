@@ -22,7 +22,9 @@ pub struct NamedValueSerializer<
     W: Write,
     Type: NBTType,
     K: Serialize + ?Sized,
-> {
+> where
+    &'name str: NBTDataType<Type>,
+{
     pub(crate) target: &'writer mut W,
     pub(crate) name: StringOrSerializer<'name, K>,
     pub(crate) phantom: std::marker::PhantomData<Type>,
@@ -32,6 +34,7 @@ impl<'writer, 'name: 'writer, W: Write, Type: NBTType, K: Serialize + ?Sized>
     NamedValueSerializer<'writer, 'name, W, Type, K>
 where
     'writer: 'name,
+    &'name str: NBTDataType<Type>,
 {
     pub fn new(target: &'writer mut W, name: StringOrSerializer<'name, K>) -> Self {
         Self {
@@ -41,8 +44,23 @@ where
         }
     }
     #[inline]
-    pub fn write<Data: NBTDataType<Type>>(&mut self, _value: Data) -> Result<(), Error> {
-        todo!("write");
+    pub fn write<Data: NBTDataType<Type>>(&mut self, value: Data) -> Result<(), Error> {
+        Data::get_tag().write_alone(self.target)?;
+        match &self.name {
+            StringOrSerializer::String(name) => {
+                Type::write_tag_name(self.target, name)?;
+            }
+            StringOrSerializer::Serializer(name) => {
+                let get_name = GetName::<'_, W, Type> {
+                    target: self.target,
+                    phantom: Default::default(),
+                };
+                name.serialize(get_name)?;
+            }
+            StringOrSerializer::None => {}
+        }
+        value.write_alone(self.target)?;
+        Ok(())
     }
     #[inline]
     pub fn write_tag(&mut self, value: Tag) -> Result<(), Error> {
@@ -60,8 +78,8 @@ where
                 name.serialize(name_getter)?;
             }
             _ => {
-                // TODO      value.write_to(&mut self.target)?;
-                // TODO     0u16.write_to(&mut self.target)?;
+                value.write_alone(&mut self.target)?;
+                Type::write_tag_name(&mut self.target, b"")?;
             }
         }
         Ok(())
@@ -80,6 +98,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = Error;
@@ -122,11 +141,11 @@ where
     }
 
     fn serialize_char(self, _v: char) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        todo!("serialize_char")
     }
 
-    fn serialize_str(self, _v: &str) -> Result<Self::Ok, Self::Error> {
-        todo!("Get Around Borrow Checker")
+    fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
+        self.write(v)
     }
 
     fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {

@@ -1,8 +1,7 @@
-
-
 use crate::serde_impl::deserializer::NBTDeserializer;
-use crate::{NBTError, NBTType, Tag};
+use crate::{NBTDataType, NBTError, NBTType, Tag};
 
+use crate::serde_impl::serialize::NBTSerializer;
 use std::fmt::{Debug, Display};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::string::FromUtf8Error;
@@ -46,17 +45,28 @@ impl serde::ser::Error for Error {
         Self::Custom(format!("{}", msg))
     }
 }
-/*
+
 pub fn to_writer<Type: NBTType, W: Write, T: serde::Serialize>(
     writer: &mut W,
     value: &T,
-) -> Result<(), Error> {
+) -> Result<(), Error>
+where
+    i8: NBTDataType<Type>,
+    i16: NBTDataType<Type>,
+    i32: NBTDataType<Type>,
+    i64: NBTDataType<Type>,
+    f32: NBTDataType<Type>,
+    f64: NBTDataType<Type>,
+    String: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
+    bool: NBTDataType<Type>,
+{
     let mut ser: NBTSerializer<'_, W, Type> = NBTSerializer {
         writer,
         phantom: Default::default(),
     };
     value.serialize(ser)
-}*/
+}
 
 pub fn from_reader<'de, Type: NBTType, R: Read + Debug, T: serde::Deserialize<'de>>(
     reader: R,

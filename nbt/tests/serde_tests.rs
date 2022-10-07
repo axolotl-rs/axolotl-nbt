@@ -1,4 +1,4 @@
-use axolotl_nbt::binary::sync::{NBTReader, NBTWriter};
+use axolotl_nbt::binary::Binary;
 use axolotl_nbt::serde_impl;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -48,7 +48,10 @@ pub fn generic_compound() {
     serde_impl::to_writer(&mut file, &player).unwrap();
     drop(file);
     let player: SimplePlayer =
-        serde_impl::from_reader(&mut BufReader::new(File::open(path).unwrap())).unwrap();
+        serde_impl::from_buf_reader::<'_, Binary, BufReader<File>, SimplePlayer>(BufReader::new(
+            File::open(path).unwrap(),
+        ))
+        .unwrap();
     println!("{:?}", player);
 }
 
@@ -72,7 +75,10 @@ pub fn test_lists() {
     serde_impl::to_writer(&mut file, &tests).unwrap();
 
     drop(file);
-    let data: ListTests = serde_impl::from_reader(&mut File::open(path).unwrap()).unwrap();
+    let data: ListTests = serde_impl::from_buf_reader::<'_, Binary, BufReader<File>, ListTests>(
+        BufReader::new(File::open(path).unwrap()),
+    )
+    .unwrap();
     println!("{:?}", data);
 }
 
@@ -110,6 +116,8 @@ pub fn complex_list() {
     serde_impl::to_writer(&mut file, &tests).unwrap();
 
     drop(file);
-    let data: ComplexList = serde_impl::from_reader(&mut File::open(path).unwrap()).unwrap();
+    let data: ComplexList =
+        serde_impl::from_reader::<'_, Binary, File, ComplexList>(File::open(path).unwrap())
+            .unwrap();
     println!("{:?}", data);
 }

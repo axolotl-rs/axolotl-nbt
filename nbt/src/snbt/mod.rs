@@ -7,7 +7,7 @@ use crate::snbt::parse::lexer::Token;
 use crate::snbt::parse::parser;
 use crate::{
     CompoundReader, CompoundWriter, ListReader, ListType, ListWriter, NBTDataType, NBTError,
-    NBTType, Tag, Value,
+    NBTType, NameLessValue, Tag, Value,
 };
 use logos::Logos;
 use std::io::{Read, Write};
@@ -45,7 +45,7 @@ impl NBTType for SNBT {
         todo!()
     }
 
-    fn read_tag_name_raw<R: Read>(_reader: &mut R, _value: &mut [u8]) -> Result<(), NBTError> {
+    fn read_tag_name_raw<R: Read>(reader: &mut R, value: &mut Vec<u8>) -> Result<(), NBTError> {
         todo!()
     }
 
@@ -94,11 +94,7 @@ impl<'reader, Reader: Read + 'reader> ListReader<'reader, SNBT, Reader>
         todo!()
     }
 
-    fn read_all_bytes(&mut self) -> Result<Vec<u8>, NBTError> {
-        todo!()
-    }
-
-    fn read_next(&mut self) -> Result<Value, NBTError> {
+    fn read_next(&mut self) -> Result<NameLessValue, NBTError> {
         todo!()
     }
 }
@@ -106,24 +102,54 @@ impl<'reader, Reader: Read + 'reader> ListReader<'reader, SNBT, Reader>
 pub struct SNBTListWriter<'writer, Writer: Write + 'writer> {
     writer: &'writer mut Writer,
 }
-impl<'writer, Writer: Write> ListWriter<'writer, SNBT, Writer> for SNBTListWriter<'writer, Writer>{
-    fn new<Name: AsRef<[u8]>>(_reader: &'writer mut Writer, _size: i32, _list_type: ListType, _name: Name) -> Result<Self, NBTError> where Self: Sized {
+impl<'writer, Writer: Write> ListWriter<'writer, SNBT, Writer> for SNBTListWriter<'writer, Writer> {
+    fn new<Name: AsRef<[u8]>>(
+        _reader: &'writer mut Writer,
+        _size: i32,
+        _list_type: ListType,
+        _name: Name,
+    ) -> Result<Self, NBTError>
+    where
+        Self: Sized,
+    {
         todo!()
     }
 
-    fn new_sub_sequence(_reader: &'writer mut Writer, _size: i32, _list_type: ListType) -> Result<Self, NBTError> where Self: Sized {
+    fn new_sub_sequence(
+        _reader: &'writer mut Writer,
+        _size: i32,
+        _list_type: ListType,
+    ) -> Result<Self, NBTError>
+    where
+        Self: Sized,
+    {
         todo!()
     }
 
-    fn write_sequence_header_name_callback<W: Write, Name>(_writer: &mut W, _list_type: ListType, _length_of_array: i32, _name: Name) -> Result<(), NBTError> where Name: FnOnce(&mut W) -> Result<(), NBTError> {
+    fn write_sequence_header_name_callback<W: Write, Name>(
+        _writer: &mut W,
+        _list_type: ListType,
+        _length_of_array: i32,
+        _name: Name,
+    ) -> Result<(), NBTError>
+    where
+        Name: FnOnce(&mut W) -> Result<(), NBTError>,
+    {
         todo!()
     }
 
-    fn write_sub_sequence_header<W: Write>(_writer: &mut W, _tag_of_data_within: ListType, _length_of_array: i32) -> Result<(), NBTError> {
+    fn write_sub_sequence_header<W: Write>(
+        _writer: &mut W,
+        _tag_of_data_within: ListType,
+        _length_of_array: i32,
+    ) -> Result<(), NBTError> {
         todo!()
     }
 
-    fn write_next_tag<DataType: NBTDataType<SNBT>>(&mut self, _value: DataType) -> Result<(), NBTError> {
+    fn write_next_tag<DataType: NBTDataType<SNBT>>(
+        &mut self,
+        _value: DataType,
+    ) -> Result<(), NBTError> {
         todo!()
     }
 }

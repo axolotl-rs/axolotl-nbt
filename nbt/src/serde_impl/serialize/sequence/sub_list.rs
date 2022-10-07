@@ -1,4 +1,3 @@
-
 use crate::serde_impl::serialize::macros::{gen_method_body, impossible, method_body};
 
 use crate::serde_impl::serialize::{cast_and_write, Compound};
@@ -6,9 +5,7 @@ use crate::serde_impl::Error;
 use crate::{NBTDataType, NBTType, Tag};
 use serde::{ser, Serialize};
 
-
 use std::io::Write;
-
 
 pub struct SubList<'writer, W: Write, Type: NBTType>
 where
@@ -40,6 +37,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = super::Error;
@@ -112,12 +110,46 @@ where
     bool: NBTDataType<Type>,
 {
     #[inline]
-    fn parent(&mut self, _tag: Tag) -> Result<(), Error> {
-        todo!("parent")
+    fn parent(&mut self, tag: Tag) -> Result<(), Error> {
+        if !self.wrote_parent_header {
+            match tag {
+                Tag::Byte => {
+                    Tag::ByteArray.write_alone(&mut self.outer)?;
+                    self.parent_size.write_alone(&mut self.outer)?;
+                }
+                Tag::Int => {
+                    Tag::IntArray.write_alone(&mut self.outer)?;
+                    self.parent_size.write_alone(&mut self.outer)?;
+                }
+                Tag::Long => {
+                    Tag::LongArray.write_alone(&mut self.outer)?;
+                    self.parent_size.write_alone(&mut self.outer)?;
+                }
+                _ => {
+                    Tag::List.write_alone(&mut self.outer)?;
+                    self.parent_size.write_alone(&mut self.outer)?;
+                }
+            }
+        }
+        Ok(())
     }
     #[inline]
-    pub fn write<Data: NBTDataType<Type>>(&mut self, _data: Data) -> Result<(), Error> {
-        todo!("write")
+    pub fn write<Data: NBTDataType<Type>>(&mut self, data: Data) -> Result<(), Error> {
+        self.parent(Data::get_tag())?;
+        if !self.wrote_header {
+            match Data::get_tag() {
+                Tag::Byte | Tag::Int | Tag::Long => {
+                    self.length.write_alone(&mut self.outer)?;
+                }
+                v => {
+                    v.write_alone(&mut self.outer)?;
+                    self.length.write_alone(&mut self.outer)?;
+                }
+            }
+        }
+        data.write_alone(&mut self.outer)?;
+
+        Ok(())
     }
 }
 
@@ -132,6 +164,7 @@ where
     f64: NBTDataType<Type>,
     String: NBTDataType<Type>,
     bool: NBTDataType<Type>,
+    for<'str> &'str str: NBTDataType<Type>,
 {
     type Ok = ();
     type Error = Error;
@@ -187,15 +220,15 @@ where
     }
 
     fn serialize_char(self, _v: char) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        todo!("serialize_char")
     }
 
-    fn serialize_str(self, _v: &str) -> Result<Self::Ok, Self::Error> {
-        todo!("serialize_str")
+    fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
+        self.write(v)
     }
 
     fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        todo!("serialize_bytes")
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
