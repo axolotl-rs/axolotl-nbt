@@ -9,19 +9,19 @@ use std::io::{Read, Write};
 
 impl NBTDataType<Binary> for Value {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
-        #[cfg(feature = "log")]
+        #[cfg(feature = "log_all")]
         log::trace!("Reading Tag");
-            let tag = Tag::read(reader)?;
+        let tag = Tag::read(reader)?;
         if tag == Tag::End {
             return Ok(Value::End);
         }
-        #[cfg(feature = "log")]
+        #[cfg(feature = "log_all")]
         log::trace!("Reading Name");
-            let tag_name = Binary::read_tag_name(reader)?;
-        #[cfg(feature = "log")]
+        let tag_name = Binary::read_tag_name(reader)?;
+        #[cfg(feature = "log_all")]
         log::debug!("Reading tag: {:?} Name: {:?}", tag, tag_name);
 
         match tag {
@@ -257,8 +257,8 @@ impl NameLessValue {
 
 impl NBTDataType<Binary> for NameLessValue {
     fn read<R: Read>(_reader: &mut R) -> Result<Self, NBTError>
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         unimplemented!("Please use read(tag, reader) instead")
     }

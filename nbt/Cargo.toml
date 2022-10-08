@@ -17,6 +17,8 @@ log = { version = "0.4.17", optional = true }
 [features]
 default = ["value", "serde"]
 value = []
+# Used when you want to log more infomation about the parsing process
+log_all = []
 [dev-dependencies]
 
 flate2 = { version = "1.0.24" }

@@ -1,2 +1,2 @@
 [workspace]
-members = ["nbt", "world"]
+members = ["nbt"]
