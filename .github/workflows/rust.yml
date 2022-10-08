@@ -13,7 +13,7 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: beta
           override: true
 
       - name: Run cargo test
@@ -31,7 +31,7 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: beta
           override: true
           components: rustfmt, clippy
 
