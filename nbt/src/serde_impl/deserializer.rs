@@ -244,12 +244,10 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
                 };
                 visitor.visit_seq(deserializer)
             }
-            t => {
-                Err(Error::Custom(format!(
-                    "deserialize_any not implemented for {:?}",
-                    t
-                )))
-            }
+            t => Err(Error::Custom(format!(
+                "deserialize_any not implemented for {:?}",
+                t
+            ))),
         }
     }
 

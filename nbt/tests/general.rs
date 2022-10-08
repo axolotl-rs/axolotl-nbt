@@ -1,7 +1,7 @@
-use std::env::current_dir;
-use std::fs::{File, read};
-use axolotl_nbt::{NBTDataType};
 use axolotl_nbt::value::Value;
+use axolotl_nbt::NBTDataType;
+use std::env::current_dir;
+use std::fs::{read, File};
 
 pub fn test_file(file_name: &str) {
     let working_directory = current_dir().expect("a current directory").join("tests");
@@ -30,7 +30,10 @@ pub fn test_file(file_name: &str) {
             drop(file);
             println!("Error: {}", err);
             // This will fail but it allows for a nice diff
-            assert_eq!(read(&read_file).expect("a file"), read(&write_test).expect("a file"));
+            assert_eq!(
+                read(&read_file).expect("a file"),
+                read(&write_test).expect("a file")
+            );
         }
     }
 }

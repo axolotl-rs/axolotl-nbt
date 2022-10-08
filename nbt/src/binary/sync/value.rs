@@ -25,9 +25,7 @@ impl NBTDataType<Binary> for Value {
         log::debug!("Reading tag: {:?} Name: {:?}", tag, tag_name);
 
         match tag {
-            Tag::End => {
-                Err(NBTError::UnexpectedEnd)
-            }
+            Tag::End => Err(NBTError::UnexpectedEnd),
             Tag::Byte => Ok(Value::Byte {
                 name: tag_name,
                 value: i8::read(reader)?,
@@ -199,9 +197,7 @@ impl NBTDataType<Binary> for Value {
 impl NameLessValue {
     pub fn read<Reader: Read>(tag: Tag, reader: &mut Reader) -> Result<NameLessValue, NBTError> {
         match tag {
-            Tag::End => {
-                Err(NBTError::UnexpectedEnd)
-            }
+            Tag::End => Err(NBTError::UnexpectedEnd),
             Tag::Byte => Ok(NameLessValue::Byte(i8::read(reader)?)),
             Tag::Short => Ok(NameLessValue::Short(i16::read(reader)?)),
             Tag::Int => Ok(NameLessValue::Int(i32::read(reader)?)),
