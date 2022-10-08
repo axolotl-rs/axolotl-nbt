@@ -26,7 +26,7 @@ impl NBTDataType<Binary> for Value {
 
         match tag {
             Tag::End => {
-                return Err(NBTError::UnexpectedEnd);
+                Err(NBTError::UnexpectedEnd)
             }
             Tag::Byte => Ok(Value::Byte {
                 name: tag_name,
@@ -143,7 +143,7 @@ impl NBTDataType<Binary> for Value {
             }
             Value::ByteArray { name, value } => {
                 let mut writer =
-                    BinaryListWriter::new(writer, value.len() as i32, ListType::IntArray, name)?;
+                    BinaryListWriter::new(writer, value.len() as i32, ListType::ByteArray, name)?;
                 for i in value {
                     writer.write_next_tag(i)?;
                 }
@@ -200,7 +200,7 @@ impl NameLessValue {
     pub fn read<Reader: Read>(tag: Tag, reader: &mut Reader) -> Result<NameLessValue, NBTError> {
         match tag {
             Tag::End => {
-                return Err(NBTError::UnexpectedEnd);
+                Err(NBTError::UnexpectedEnd)
             }
             Tag::Byte => Ok(NameLessValue::Byte(i8::read(reader)?)),
             Tag::Short => Ok(NameLessValue::Short(i16::read(reader)?)),
@@ -323,7 +323,6 @@ impl NBTDataType<Binary> for NameLessValue {
                 }
             }
             NameLessValue::Compound(data) => {
-                Tag::Compound.write_alone(writer)?;
                 for i in data {
                     i.write_alone(writer)?;
                 }

@@ -15,7 +15,6 @@ use std::io::{Read, Write};
 #[cfg(test)]
 mod tests {
     use crate::snbt::to_value;
-    use crate::to_value;
 
     #[test]
     fn it_works() {
@@ -45,7 +44,7 @@ impl NBTType for SNBT {
         todo!()
     }
 
-    fn read_tag_name_raw<R: Read>(reader: &mut R, value: &mut Vec<u8>) -> Result<(), NBTError> {
+    fn read_tag_name_raw<R: Read>(_reader: &mut R, _value: &mut Vec<u8>) -> Result<(), NBTError> {
         todo!()
     }
 

@@ -262,7 +262,7 @@ where
         }
 
         Ok(Compound {
-            writer: &mut self.outer,
+            writer: self.outer,
             phantom: Default::default(),
         })
     }
@@ -279,7 +279,7 @@ where
         }
 
         Ok(Compound {
-            writer: &mut self.outer,
+            writer: self.outer,
             phantom: Default::default(),
         })
     }

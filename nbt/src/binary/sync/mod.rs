@@ -11,8 +11,8 @@ pub mod value;
 
 impl NBTDataType<Binary> for bool {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         Ok(reader.read_u8()? != 0)
     }
@@ -24,13 +24,13 @@ impl NBTDataType<Binary> for bool {
     ) -> Result<(), NBTError> {
         Tag::Byte.write_alone(writer)?;
         Binary::write_tag_name(writer, name)?;
-        writer.write_i8(if self { 1 } else { 0 })?;
+        writer.write_i8(i8::from(self))?;
         Ok(())
     }
 
+    #[inline]
     fn write_alone<W: Write>(self, writer: &mut W) -> Result<(), NBTError> {
-        writer.write_u8(if self { 1 } else { 0 })?;
-        Ok(())
+        writer.write_i8(i8::from(self)).map_err(NBTError::from)
     }
 
     fn get_tag() -> Tag {
@@ -40,13 +40,13 @@ impl NBTDataType<Binary> for bool {
 
 impl NBTDataType<Binary> for Tag {
     fn read_with_name<R: Read>(reader: &mut R) -> Result<(String, Self), NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         let tag = reader.read_u8()? as i8;
         let tag = Binary::tag_from_i8(tag).ok_or(InvalidTag(tag))?;
         if tag == Tag::End {
-            return Ok((String::new(), tag));
+            Ok((String::new(), tag))
         } else {
             let name = Binary::read_tag_name(reader)?;
             Ok((name, tag))
@@ -54,8 +54,8 @@ impl NBTDataType<Binary> for Tag {
     }
     #[inline(always)]
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         let tag_id = reader.read_i8()?;
         Binary::tag_from_i8(tag_id).ok_or(InvalidTag(tag_id))
@@ -80,8 +80,8 @@ impl NBTDataType<Binary> for Tag {
 
 impl NBTDataType<Binary> for &str {
     fn read<R: Read>(_: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         unimplemented!("read str ref")
     }
@@ -109,13 +109,13 @@ impl NBTDataType<Binary> for &str {
 
 impl NBTDataType<Binary> for String {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         let len = reader.read_u16::<BigEndian>()?;
         let mut buf = vec![0; len as usize];
         reader.read_exact(&mut buf)?;
-        Ok(String::from_utf8(buf).map_err(NBTError::NotAString)?)
+        String::from_utf8(buf).map_err(NBTError::NotAString)
     }
 
     fn write<W: Write, Name: AsRef<[u8]>>(
@@ -137,8 +137,8 @@ impl NBTDataType<Binary> for String {
 
 impl NBTDataType<Binary> for i8 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         reader.read_i8().map_err(NBTError::IO)
     }
@@ -166,8 +166,8 @@ impl NBTDataType<Binary> for i8 {
 
 impl NBTDataType<Binary> for i16 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         reader.read_i16::<BigEndian>().map_err(NBTError::IO)
     }
@@ -193,22 +193,12 @@ impl NBTDataType<Binary> for i16 {
 
 impl NBTDataType<Binary> for i32 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         reader.read_i32::<BigEndian>().map_err(NBTError::IO)
     }
 
-    fn write_alone<W: Write>(self, writer: &mut W) -> Result<(), NBTError> {
-        writer.write_i32::<BigEndian>(self).map_err(NBTError::IO)
-    }
-
-    fn get_tag() -> Tag {
-        Tag::Int
-    }
-    fn get_list_tag() -> ListType {
-        ListType::IntArray
-    }
     fn write<W: Write, Name: AsRef<[u8]>>(
         self,
         name: Name,
@@ -218,12 +208,22 @@ impl NBTDataType<Binary> for i32 {
         Binary::write_tag_name(writer, name)?;
         writer.write_i32::<BigEndian>(self).map_err(NBTError::IO)
     }
+
+    fn write_alone<W: Write>(self, writer: &mut W) -> Result<(), NBTError> {
+        writer.write_i32::<BigEndian>(self).map_err(NBTError::IO)
+    }
+    fn get_list_tag() -> ListType {
+        ListType::IntArray
+    }
+    fn get_tag() -> Tag {
+        Tag::Int
+    }
 }
 
 impl NBTDataType<Binary> for i64 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         reader.read_i64::<BigEndian>().map_err(NBTError::IO)
     }
@@ -252,8 +252,8 @@ impl NBTDataType<Binary> for i64 {
 
 impl NBTDataType<Binary> for f32 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         reader.read_f32::<BigEndian>().map_err(NBTError::IO)
     }
@@ -279,8 +279,8 @@ impl NBTDataType<Binary> for f32 {
 
 impl NBTDataType<Binary> for f64 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         reader.read_f64::<BigEndian>().map_err(NBTError::IO)
     }
@@ -307,8 +307,8 @@ impl NBTDataType<Binary> for f64 {
 /// usize is treated as i32
 impl NBTDataType<Binary> for usize {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
-    where
-        Self: Sized,
+        where
+            Self: Sized,
     {
         reader
             .read_i32::<BigEndian>()

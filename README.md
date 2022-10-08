@@ -1,5 +1,10 @@
 # Axolotl-NBT
 
-An NBT, SNBT, and Minecraft World Format parser.
+General Purpose NBT and SNBT library for Rust.
 
+## Features
+
+- NBT
+- SNBT
+- Serde support
 

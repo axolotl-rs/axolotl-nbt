@@ -62,7 +62,7 @@ where
     for<'str> &'str str: NBTDataType<Type>,
     bool: NBTDataType<Type>,
 {
-    let mut ser: NBTSerializer<'_, W, Type> = NBTSerializer {
+    let ser: NBTSerializer<'_, W, Type> = NBTSerializer {
         writer,
         phantom: Default::default(),
     };

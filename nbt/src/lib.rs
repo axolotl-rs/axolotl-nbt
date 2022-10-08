@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::fmt::Debug;
 use std::io::{Read, Write};
 
@@ -13,7 +14,7 @@ use crate::value::{NameLessValue, Value};
 pub use error::NBTError;
 
 #[repr(i8)]
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Tag {
     End = 0,
     Byte = 1,
@@ -43,7 +44,7 @@ impl Tag {
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy, Eq)]
 pub enum ListType {
     ByteArray,
     IntArray,

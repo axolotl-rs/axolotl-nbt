@@ -65,7 +65,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
                 phantom: Default::default(),
             })
         } else {
-            return Err(Error::IncorrectTagError(Tag::Compound, tag));
+            Err(Error::IncorrectTagError(Tag::Compound, tag))
         }
     }
 
@@ -245,10 +245,10 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
                 visitor.visit_seq(deserializer)
             }
             t => {
-                return Err(Error::Custom(format!(
+                Err(Error::Custom(format!(
                     "deserialize_any not implemented for {:?}",
                     t
-                )));
+                )))
             }
         }
     }
@@ -327,7 +327,7 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> SeqAccess<'de>
             return Ok(None);
         }
         let de = InnerDeserializer::<'_, Reader, Type> {
-            reader: &mut self.reader,
+            reader: self.reader,
             tag: self.tag,
             phantom: Default::default(),
         };
