@@ -5,12 +5,15 @@ use std::env::current_dir;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
+use uuid::Uuid;
+use axolotl_nbt::binary::binary_uuid::BinaryUUID;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SimplePlayer {
     level: i32,
     name: String,
     experience: f32,
+    uuid: BinaryUUID,
 }
 
 impl Default for SimplePlayer {
@@ -19,6 +22,7 @@ impl Default for SimplePlayer {
             level: 5,
             name: "Player".to_string(),
             experience: 0.0,
+            uuid: BinaryUUID::from(Uuid::new_v4()),
         }
     }
 }
@@ -46,6 +50,7 @@ pub fn generic_compound() {
         level: 1,
         name: "KingTux".to_string(),
         experience: 0.0,
+        uuid: BinaryUUID([-796458901, -684962593, -1840418928, 923062364]),
     };
     let path = test_output().join("generic_compound.nbt");
     if path.exists() {

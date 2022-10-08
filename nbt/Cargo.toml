@@ -13,7 +13,7 @@ serde = { version = "1", optional = true }
 paste = { version = "1" }
 logos = "0.12"
 log = { version = "0.4.17", optional = true }
-
+uuid = { version = "1", features = ["v4"] }
 [features]
 default = ["value", "serde"]
 value = []

@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use std::io::{Read, Write};
 
 pub mod sync;
+pub mod binary_uuid;
 
 #[derive(Debug)]
 pub struct Binary;
