@@ -21,6 +21,11 @@ jobs:
         with:
           command: test
           args: --all-features
+      - name: Archive NBT Files
+        uses: actions/upload-artifact@v3
+        with:
+          name: files
+          path: nbt/tests/output/*.nbt
   lints:
     name: Lints
     runs-on: ubuntu-latest

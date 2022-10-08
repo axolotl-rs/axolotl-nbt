@@ -2,10 +2,20 @@ use axolotl_nbt::value::Value;
 use axolotl_nbt::NBTDataType;
 use std::env::current_dir;
 use std::fs::{read, File};
+use std::path::PathBuf;
+
+fn test_output() -> PathBuf {
+    let buf = current_dir()
+        .expect("a current directory")
+        .join("tests")
+        .join("output");
+    buf
+}
 
 pub fn test_file(file_name: &str) {
     let working_directory = current_dir().expect("a current directory").join("tests");
-    let read_file = working_directory.join(format!("{}.nbt", file_name));
+    let string = format!("{}.nbt", file_name);
+    let read_file = working_directory.join(&string);
     if !read_file.exists() {
         panic!("File does not exist: {}", read_file.display());
     }
@@ -13,7 +23,7 @@ pub fn test_file(file_name: &str) {
     let value = Value::read(&mut file).expect("a value");
     drop(file);
 
-    let write_test = working_directory.join(format!("{}.write.nbt", file_name));
+    let write_test = test_output().join(string);
     if write_test.exists() {
         std::fs::remove_file(&write_test).expect("a file");
     }

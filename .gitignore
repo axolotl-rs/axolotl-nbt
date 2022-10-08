@@ -2,4 +2,4 @@
 /Cargo.lock
 *.iml
 .idea
-*.write.nbt
+nbt/tests/output/*.nbt
