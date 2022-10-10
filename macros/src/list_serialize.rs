@@ -36,12 +36,14 @@ pub(crate) fn parse_struct(type_ident: Ident, data: DataStruct) -> Result<TokenS
         impl<'de> serde::de::Visitor<'de> for #visitor_name {
             type Value = #type_ident;
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                formatter.write_str("a list of #fields_size floats")
+                formatter.write_str(concat!("a sequence of ", #fields_size, " elements"))
             }
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error> where A: serde::de::SeqAccess<'de> {
                 use serde::de::Error;
-                if seq.size_hint() != Some(#fields_size) {
-                    return Err(A::Error::invalid_length(#fields_size, &self));
+                if let Some(size) = seq.size_hint() {
+                    if size != #fields_size {
+                        return Err(serde::de::Error::invalid_length(size, &self));
+                    }
                 }
                 Ok(#type_ident {
                     #(

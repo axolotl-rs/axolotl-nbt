@@ -8,13 +8,23 @@ use std::collections::HashMap;
 use std::env::current_dir;
 use std::fs::File;
 use std::io::BufReader;
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 use uuid::Uuid;
+
+
+#[derive(Debug, ListSerialize)]
+pub struct Armor {
+    pub boots: f32,
+    pub chestplate: f32,
+    pub helmet: f32,
+    pub leggings: f32,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SimplePlayer {
     level: i32,
     name: String,
+    armor: Armor,
     experience: f32,
     uuid: BinaryUUID,
 }
@@ -24,6 +34,12 @@ impl Default for SimplePlayer {
         Self {
             level: 5,
             name: "Player".to_string(),
+            armor: Armor {
+                boots: 0.0,
+                chestplate: 0.0,
+                helmet: 0.0,
+                leggings: 0.0,
+            },
             experience: 0.0,
             uuid: BinaryUUID::from(Uuid::new_v4()),
         }
@@ -52,6 +68,12 @@ pub fn generic_compound() {
     let player = SimplePlayer {
         level: 1,
         name: "KingTux".to_string(),
+        armor: Armor {
+            boots: 0.0,
+            chestplate: 0.0,
+            helmet: 0.0,
+            leggings: 0.0,
+        },
         experience: 0.0,
         uuid: BinaryUUID([-796458901, -684962593, -1840418928, 923062364]),
     };
@@ -177,12 +199,4 @@ pub fn value_test() {
     let data: ValueTest =
         serde_impl::from_reader::<'_, Binary, File, ValueTest>(File::open(path).unwrap()).unwrap();
     println!("{:?}", data);
-}
-
-#[derive(Debug, ListSerialize)]
-pub struct Armor {
-    pub boots: f32,
-    pub chestplate: f32,
-    pub helmet: f32,
-    pub leggings: f32,
 }
