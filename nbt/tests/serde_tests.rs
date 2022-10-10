@@ -2,6 +2,7 @@ use axolotl_nbt::binary::binary_uuid::BinaryUUID;
 use axolotl_nbt::binary::Binary;
 use axolotl_nbt::serde_impl;
 use axolotl_nbt::value::{NameLessValue, Value};
+use axolotl_nbt_macros::ListSerialize;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env::current_dir;
@@ -165,7 +166,7 @@ pub fn value_test() {
         "test4".to_string(),
         NameLessValue::LongArray(vec![1, 2, 3, 4, 5]),
     );
-    let path = test_output().join("complex_list.nbt");
+    let path = test_output().join("value_test.nbt");
     if path.exists() {
         std::fs::remove_file(&path).unwrap();
     }
@@ -176,4 +177,12 @@ pub fn value_test() {
     let data: ValueTest =
         serde_impl::from_reader::<'_, Binary, File, ValueTest>(File::open(path).unwrap()).unwrap();
     println!("{:?}", data);
+}
+
+#[derive(Debug, ListSerialize)]
+pub struct Armor {
+    pub boots: f32,
+    pub chestplate: f32,
+    pub helmet: f32,
+    pub leggings: f32,
 }

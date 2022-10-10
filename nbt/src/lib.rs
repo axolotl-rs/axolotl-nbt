@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+
 use std::fmt::Debug;
 use std::io::{Read, Write};
 
@@ -11,6 +12,8 @@ pub mod snbt;
 pub mod value;
 
 use crate::value::{NameLessValue, Value};
+#[cfg(feature = "axolotl-nbt-macros")]
+pub use axolotl_nbt_macros;
 pub use error::NBTError;
 
 #[repr(i8)]
