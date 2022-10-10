@@ -6,8 +6,8 @@ use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::fmt::Debug;
 use std::io::{Read, Write};
 
-pub mod sync;
 pub mod binary_uuid;
+pub mod sync;
 
 #[derive(Debug)]
 pub struct Binary;

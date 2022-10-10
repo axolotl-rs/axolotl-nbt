@@ -1,12 +1,14 @@
+use axolotl_nbt::binary::binary_uuid::BinaryUUID;
 use axolotl_nbt::binary::Binary;
 use axolotl_nbt::serde_impl;
+use axolotl_nbt::value::{NameLessValue, Value};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::env::current_dir;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
-use axolotl_nbt::binary::binary_uuid::BinaryUUID;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SimplePlayer {
@@ -125,5 +127,53 @@ pub fn complex_list() {
     let data: ComplexList =
         serde_impl::from_reader::<'_, Binary, File, ComplexList>(File::open(path).unwrap())
             .unwrap();
+    println!("{:?}", data);
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ValueTest {
+    one: Value,
+    two: Vec<NameLessValue>,
+    other: HashMap<String, NameLessValue>,
+}
+
+#[test]
+pub fn value_test() {
+    let mut tests = ValueTest {
+        one: Value::Compound {
+            name: "hey".to_string(),
+            value: vec![Value::Boolean {
+                name: "test".to_string(),
+                value: false,
+            }],
+        },
+        two: vec![NameLessValue::Boolean(false), NameLessValue::Boolean(true)],
+        other: HashMap::new(),
+    };
+    tests
+        .other
+        .insert("test".to_string(), NameLessValue::Boolean(false));
+    tests.other.insert(
+        "test2".to_string(),
+        NameLessValue::ByteArray(vec![1, 2, 3, 4, 5]),
+    );
+    tests.other.insert(
+        "test3".to_string(),
+        NameLessValue::IntArray(vec![1, 2, 3, 4, 5]),
+    );
+    tests.other.insert(
+        "test4".to_string(),
+        NameLessValue::LongArray(vec![1, 2, 3, 4, 5]),
+    );
+    let path = test_output().join("complex_list.nbt");
+    if path.exists() {
+        std::fs::remove_file(&path).unwrap();
+    }
+    let mut file = File::create(&path).expect("a file");
+    serde_impl::to_writer(&mut file, &tests).unwrap();
+
+    drop(file);
+    let data: ValueTest =
+        serde_impl::from_reader::<'_, Binary, File, ValueTest>(File::open(path).unwrap()).unwrap();
     println!("{:?}", data);
 }

@@ -3,13 +3,11 @@ use serde::ser::SerializeSeq;
 use serde::Serialize;
 use uuid::Uuid;
 
-
 /// Represents the UUID the way it is stored in NBT.
 ///
 /// Via 4 i32s.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BinaryUUID(pub [i32; 4]);
-
 
 impl From<Uuid> for BinaryUUID {
     fn from(v: Uuid) -> Self {
@@ -22,7 +20,6 @@ impl From<Uuid> for BinaryUUID {
     }
 }
 
-
 #[allow(clippy::from_over_into)]
 impl Into<[i64; 2]> for BinaryUUID {
     fn into(self) -> [i64; 2] {
@@ -31,7 +28,6 @@ impl Into<[i64; 2]> for BinaryUUID {
         [lower, upper]
     }
 }
-
 
 #[allow(clippy::from_over_into)]
 impl Into<Uuid> for BinaryUUID {
@@ -47,7 +43,6 @@ impl Into<Uuid> for BinaryUUID {
         Uuid::from_bytes(bytes)
     }
 }
-
 
 impl Serialize for BinaryUUID {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -69,7 +64,10 @@ impl<'de> serde::de::Visitor<'de> for BinaryUUIDVisitor {
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         formatter.write_str("a sequence of 4 integers")
     }
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error> where A: SeqAccess<'de> {
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: SeqAccess<'de>,
+    {
         let option = seq.size_hint();
         if let Some(size) = option {
             if size != 4 {
@@ -78,7 +76,9 @@ impl<'de> serde::de::Visitor<'de> for BinaryUUIDVisitor {
         }
         let mut ints = [0; 4];
         for x in ints.iter_mut() {
-            *x = seq.next_element()?.ok_or_else(|| serde::de::Error::invalid_length(4, &self))?;
+            *x = seq
+                .next_element()?
+                .ok_or_else(|| serde::de::Error::invalid_length(4, &self))?;
         }
         Ok(BinaryUUID(ints))
     }
@@ -95,13 +95,12 @@ impl<'de> serde::Deserialize<'de> for BinaryUUID {
 
 #[cfg(test)]
 pub mod tests {
+    use crate::binary::binary_uuid::BinaryUUID;
     use std::str::FromStr;
     use uuid::Uuid;
-    use crate::binary::binary_uuid::BinaryUUID;
 
     pub const MY_UUID_AS_I32: [i32; 4] = [-796458901, -684962593, -1840418928, 923062364];
     pub const MY_UUID: &str = "d087006b-d72c-4cdf-924d-6f903704d05c";
-
 
     #[test]
     pub fn test_from_uuid() {

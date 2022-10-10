@@ -190,7 +190,6 @@ impl NBTDataType<Binary> for i16 {
         Tag::Short
     }
 }
-
 impl NBTDataType<Binary> for i32 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, NBTError>
         where

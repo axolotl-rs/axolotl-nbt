@@ -10,6 +10,8 @@ use thiserror::Error;
 
 mod deserializer;
 mod serialize;
+#[cfg(feature = "value")]
+pub mod value;
 
 #[derive(Debug, Error)]
 pub enum Error {
