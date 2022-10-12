@@ -4,73 +4,91 @@ use crate::Tag;
 use serde::de::{DeserializeSeed, IntoDeserializer, MapAccess, SeqAccess, Visitor};
 use serde::{forward_to_deserialize_any, Deserializer};
 
-/// Turns a value into a Object
 pub struct ValueDeserializer(pub Value);
 
-impl<'de> Deserializer<'de> for ValueDeserializer {
-    type Error = Error;
-    fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-        where
-            V: Visitor<'de>,
-    {
-        Err(Error::Custom("deserialize_any not implemented".to_string()))
-    }
-
-    fn deserialize_unit_struct<V>(
-        self,
-        _name: &'static str,
-        visitor: V,
-    ) -> Result<V::Value, Self::Error>
-        where
-            V: Visitor<'de>,
-    {
-        visitor.visit_unit()
-    }
-
-    forward_to_deserialize_any! {
-        bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char str string bytes byte_buf
-        unit seq tuple_struct tuple option enum identifier ignored_any
-    }
-
-    fn deserialize_newtype_struct<V>(
-        self,
-        _name: &'static str,
-        visitor: V,
-    ) -> Result<V::Value, Self::Error>
-        where
-            V: Visitor<'de>,
-    {
-        visitor.visit_newtype_struct(self)
-    }
-
-    fn deserialize_map<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-        where
-            V: Visitor<'de>,
-    {
-        match self.0 {
-            Value::Compound { value, .. } => {
-                let map = CompoundMap {
-                    value,
-                    next_value: None,
-                };
-                visitor.visit_map(map)
+macro_rules! impl_deserializer {
+    ($name:ty, $self:ident, $visitor:ident, $map:block) => {
+        impl<'de> Deserializer<'de> for $name {
+            type Error = Error;
+            fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
+            where
+                V: Visitor<'de>,
+            {
+                Err(Error::Custom("deserialize_any not implemented".to_string()))
             }
-            v => Err(Error::IncorrectTagError(Tag::Compound, v.tag())),
-        }
-    }
 
-    fn deserialize_struct<V>(
-        self,
-        _name: &'static str,
-        _fields: &'static [&'static str],
-        visitor: V,
-    ) -> Result<V::Value, Self::Error>
-        where
-            V: Visitor<'de>,
-    {
-        self.deserialize_map(visitor)
-    }
+            fn deserialize_unit_struct<V>(
+                self,
+                _name: &'static str,
+                visitor: V,
+            ) -> Result<V::Value, Self::Error>
+            where
+                V: Visitor<'de>,
+            {
+                visitor.visit_unit()
+            }
+
+            serde::forward_to_deserialize_any! {
+                bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char str string bytes byte_buf
+                unit seq tuple_struct tuple option enum identifier ignored_any
+            }
+
+            fn deserialize_newtype_struct<V>(
+                self,
+                _name: &'static str,
+                visitor: V,
+            ) -> Result<V::Value, Self::Error>
+            where
+                V: Visitor<'de>,
+            {
+                visitor.visit_newtype_struct(self)
+            }
+
+            fn deserialize_struct<V>(
+                self,
+                _name: &'static str,
+                _fields: &'static [&'static str],
+                visitor: V,
+            ) -> Result<V::Value, Self::Error>
+            where
+                V: Visitor<'de>,
+            {
+                self.deserialize_map(visitor)
+            }
+
+            fn deserialize_map<V>($self, $visitor: V) -> Result<V::Value, Self::Error>
+            where
+                V: Visitor<'de>,
+            $map
+        }
+    };
 }
+impl_deserializer!(ValueDeserializer, self, visitor, {
+    match self.0 {
+        Value::Compound { value, .. } => {
+            let map = CompoundMap {
+                value,
+                next_value: None,
+            };
+            visitor.visit_map(map)
+        }
+        v => Err(Error::IncorrectTagError(Tag::Compound, v.tag())),
+    }
+});
+
+pub struct NamelessValueDeserializer(pub NameLessValue);
+impl_deserializer!(NamelessValueDeserializer, self, visitor, {
+    match self.0 {
+        NameLessValue::Compound(value) => {
+            let map = CompoundMap {
+                value,
+                next_value: None,
+            };
+            visitor.visit_map(map)
+        }
+        v => Err(Error::IncorrectTagError(Tag::Compound, v.tag())),
+    }
+});
 
 pub struct CompoundMap {
     pub value: Vec<Value>,
