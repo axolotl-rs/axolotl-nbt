@@ -8,9 +8,8 @@ use std::collections::HashMap;
 use std::env::current_dir;
 use std::fs::File;
 use std::io::BufReader;
-use std::path::{PathBuf};
+use std::path::PathBuf;
 use uuid::Uuid;
-
 
 #[derive(Debug, ListSerialize)]
 pub struct Armor {

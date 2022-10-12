@@ -58,6 +58,67 @@ pub enum Value {
     },
 }
 
+impl From<Value> for (NameLessValue, String) {
+    fn from(v: Value) -> Self {
+        match v {
+            Value::End => (NameLessValue::End, String::new()),
+            Value::Byte { value, name } => (NameLessValue::Byte(value), name),
+            Value::Short { value, name } => (NameLessValue::Short(value), name),
+            Value::Int { value, name } => (NameLessValue::Int(value), name),
+            Value::Long { value, name } => (NameLessValue::Long(value), name),
+            Value::Float { value, name } => (NameLessValue::Float(value), name),
+            Value::Double { value, name } => (NameLessValue::Double(value), name),
+            Value::ByteArray { value, name } => (NameLessValue::ByteArray(value), name),
+            Value::String { value, name } => (NameLessValue::String(value), name),
+            Value::List { value, name } => (NameLessValue::List(value), name),
+            Value::Compound { value, name } => (NameLessValue::Compound(value), name),
+            Value::IntArray { value, name } => (NameLessValue::IntArray(value), name),
+            Value::LongArray { value, name } => (NameLessValue::LongArray(value), name),
+            Value::Boolean { value, name } => (NameLessValue::Boolean(value), name),
+        }
+    }
+}
+
+impl Value {
+    pub fn tag(&self) -> Tag {
+        match self {
+            Value::End => Tag::End,
+            Value::Byte { .. } => Tag::Byte,
+            Value::Short { .. } => Tag::Short,
+            Value::Int { .. } => Tag::Int,
+            Value::Long { .. } => Tag::Long,
+            Value::Float { .. } => Tag::Float,
+            Value::Double { .. } => Tag::Double,
+            Value::ByteArray { .. } => Tag::ByteArray,
+            Value::String { .. } => Tag::String,
+            Value::List { .. } => Tag::List,
+            Value::Compound { .. } => Tag::Compound,
+            Value::IntArray { .. } => Tag::IntArray,
+            Value::LongArray { .. } => Tag::LongArray,
+            Value::Boolean { .. } => Tag::Byte,
+        }
+    }
+    pub fn get_name(&self) -> &str {
+        match self {
+            Value::End => "",
+            Value::Byte { name, .. } => name.as_str(),
+            Value::Short { name, .. } => name.as_str(),
+            Value::Int { name, .. } => name.as_str(),
+            Value::Long { name, .. } => name.as_str(),
+
+            Value::Float { name, .. } => name.as_str(),
+            Value::Double { name, .. } => name.as_str(),
+            Value::ByteArray { name, .. } => name.as_str(),
+            Value::String { name, .. } => name.as_str(),
+            Value::List { name, .. } => name.as_str(),
+            Value::Compound { name, .. } => name.as_str(),
+            Value::IntArray { name, .. } => name.as_str(),
+            Value::LongArray { name, .. } => name.as_str(),
+            Value::Boolean { name, .. } => name.as_str(),
+        }
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub enum NameLessValue {
     End,

@@ -3,6 +3,7 @@ use crate::{NBTDataType, NBTError, NBTType, Tag};
 
 use crate::binary::Binary;
 use crate::serde_impl::serialize::NBTSerializer;
+use crate::value::Value;
 use std::fmt::{Debug, Display};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::string::FromUtf8Error;
@@ -114,4 +115,10 @@ pub fn from_buf_reader_binary<'de, R: Read + BufRead + Debug, T: serde::Deserial
         phantom: Default::default(),
     };
     T::deserialize(&mut der)
+}
+
+/// Takes a Value and deserializes it into a type
+#[cfg(feature = "value")]
+pub fn from_value<'de, T: serde::Deserialize<'de>>(value: Value) -> Result<T, Error> {
+    T::deserialize(value::deserialize::ValueDeserializer(value))
 }
