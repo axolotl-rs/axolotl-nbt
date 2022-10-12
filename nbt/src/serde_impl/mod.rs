@@ -124,6 +124,8 @@ pub fn from_value<'de, T: serde::Deserialize<'de>>(value: Value) -> Result<T, Er
 }
 
 #[cfg(feature = "value")]
-pub fn from_nameless_value<'de, T: serde::Deserialize<'de>>(value: NameLessValue) -> Result<T, Error> {
+pub fn from_nameless_value<'de, T: serde::Deserialize<'de>>(
+    value: NameLessValue,
+) -> Result<T, Error> {
     T::deserialize(value::deserialize::NamelessValueDeserializer(value))
 }
