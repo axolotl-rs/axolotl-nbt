@@ -55,11 +55,10 @@ pub struct ListTests {
 }
 
 fn test_output() -> PathBuf {
-    let buf = current_dir()
+    current_dir()
         .expect("a current directory")
         .join("tests")
-        .join("output");
-    buf
+        .join("output")
 }
 
 #[test]

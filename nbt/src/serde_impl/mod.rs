@@ -1,4 +1,4 @@
-use crate::serde_impl::deserializer::NBTDeserializer;
+pub use crate::serde_impl::deserializer::NBTDeserializer;
 use crate::{NBTDataType, NBTError, NBTType, Tag};
 
 use crate::binary::Binary;

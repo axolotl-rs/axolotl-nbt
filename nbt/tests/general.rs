@@ -5,11 +5,10 @@ use std::fs::{read, File};
 use std::path::PathBuf;
 
 fn test_output() -> PathBuf {
-    let buf = current_dir()
+    current_dir()
         .expect("a current directory")
         .join("tests")
-        .join("output");
-    buf
+        .join("output")
 }
 
 pub fn test_file(file_name: &str) {

@@ -82,11 +82,11 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
     }
 }
 
-pub struct CompoundMap<'reader, Reader: Read + BufRead, Type: NBTType> {
-    pub reader: &'reader mut Reader,
-    pub key: Vec<u8>,
-    pub next_entry: Option<Tag>,
-    pub phantom: std::marker::PhantomData<Type>,
+struct CompoundMap<'reader, Reader: Read + BufRead, Type: NBTType> {
+    pub(crate) reader: &'reader mut Reader,
+    pub(crate) key: Vec<u8>,
+    pub(crate) next_entry: Option<Tag>,
+    pub(crate) phantom: std::marker::PhantomData<Type>,
 }
 
 impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> MapAccess<'de>
@@ -131,8 +131,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> MapAccess<'de>
     }
 }
 
-pub struct NameDeserializer<'string> {
-    pub content: &'string mut Vec<u8>,
+struct NameDeserializer<'string> {
+    pub(crate) content: &'string mut Vec<u8>,
 }
 
 impl<'de, 'string> Deserializer<'de> for NameDeserializer<'string> {
@@ -163,10 +163,10 @@ impl<'de, 'string> Deserializer<'de> for NameDeserializer<'string> {
     }
 }
 
-pub struct InnerDeserializer<'reader, Reader: Read + BufRead, Type: NBTType> {
-    pub reader: &'reader mut Reader,
-    pub tag: Tag,
-    pub phantom: std::marker::PhantomData<Type>,
+struct InnerDeserializer<'reader, Reader: Read + BufRead, Type: NBTType> {
+    pub(crate) reader: &'reader mut Reader,
+    pub(crate) tag: Tag,
+    pub(crate) phantom: std::marker::PhantomData<Type>,
 }
 
 impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
@@ -305,12 +305,12 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
     }
 }
 
-pub struct SequenceDeserializer<'reader, Reader: Read + BufRead, Type: NBTType> {
-    pub reader: &'reader mut Reader,
-    pub tag: Tag,
-    pub len: usize,
-    pub current: usize,
-    pub phantom: std::marker::PhantomData<Type>,
+struct SequenceDeserializer<'reader, Reader: Read + BufRead, Type: NBTType> {
+    pub(crate) reader: &'reader mut Reader,
+    pub(crate) tag: Tag,
+    pub(crate) len: usize,
+    pub(crate) current: usize,
+    pub(crate) phantom: std::marker::PhantomData<Type>,
 }
 
 impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> SeqAccess<'de>
