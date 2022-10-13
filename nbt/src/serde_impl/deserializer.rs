@@ -12,14 +12,23 @@ pub struct NBTDeserializer<Reader: Read + BufRead, Type: NBTType> {
     pub(crate) phantom: std::marker::PhantomData<Type>,
 }
 
+impl<Reader: Read + BufRead, Type: NBTType> NBTDeserializer<Reader, Type> {
+    pub fn new(src: Reader) -> Self {
+        Self {
+            src,
+            phantom: Default::default(),
+        }
+    }
+}
+
 impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
-    for &'reader mut NBTDeserializer<Reader, Type>
+for &'reader mut NBTDeserializer<Reader, Type>
 {
     type Error = super::Error;
 
     fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         Err(Error::Custom("deserialize_any not implemented".to_string()))
     }
@@ -29,8 +38,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
         _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         visitor.visit_unit()
     }
@@ -45,15 +54,15 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
         _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         visitor.visit_newtype_struct(self)
     }
 
     fn deserialize_map<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         let (_, tag) = Tag::read_with_name(&mut self.src)?;
 
@@ -75,8 +84,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
         _fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         self.deserialize_map(visitor)
     }
@@ -90,13 +99,13 @@ struct CompoundMap<'reader, Reader: Read + BufRead, Type: NBTType> {
 }
 
 impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> MapAccess<'de>
-    for CompoundMap<'reader, Reader, Type>
+for CompoundMap<'reader, Reader, Type>
 {
     type Error = super::Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
-    where
-        K: DeserializeSeed<'de>,
+        where
+            K: DeserializeSeed<'de>,
     {
         let tag = Tag::read(&mut self.reader)?;
         if Tag::End == tag {
@@ -112,8 +121,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> MapAccess<'de>
     }
 
     fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value, Self::Error>
-    where
-        V: DeserializeSeed<'de>,
+        where
+            V: DeserializeSeed<'de>,
     {
         match self.next_entry.take() {
             None => Err(Error::Custom(
@@ -143,21 +152,21 @@ impl<'de, 'string> Deserializer<'de> for NameDeserializer<'string> {
         map tuple_struct struct tuple enum identifier ignored_any option unit newtype_struct bool unit_struct
     }
     fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         visitor.visit_bytes(self.content)
     }
     fn deserialize_str<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         visitor.visit_str(std::str::from_utf8(self.content).unwrap())
     }
 
     fn deserialize_string<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         visitor.visit_string(String::from_utf8(mem::take(self.content))?)
     }
@@ -170,7 +179,7 @@ struct InnerDeserializer<'reader, Reader: Read + BufRead, Type: NBTType> {
 }
 
 impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
-    for InnerDeserializer<'reader, Reader, Type>
+for InnerDeserializer<'reader, Reader, Type>
 {
     type Error = super::Error;
     forward_to_deserialize_any! {
@@ -179,8 +188,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
     }
 
     fn deserialize_any<V>(mut self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         match self.tag {
             Tag::Byte => visitor.visit_i8(i8::read(&mut self.reader)?),
@@ -252,8 +261,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
     }
 
     fn deserialize_bool<V>(mut self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         match self.tag {
             Tag::Byte => {
@@ -269,15 +278,15 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
     }
 
     fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         visitor.visit_some(self)
     }
 
     fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         visitor.visit_unit()
     }
@@ -287,8 +296,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
         _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         visitor.visit_unit()
     }
@@ -298,8 +307,8 @@ impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> Deserializer<'de>
         _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
+        where
+            V: Visitor<'de>,
     {
         visitor.visit_newtype_struct(self)
     }
@@ -314,12 +323,12 @@ struct SequenceDeserializer<'reader, Reader: Read + BufRead, Type: NBTType> {
 }
 
 impl<'de, 'reader, Reader: Read + BufRead, Type: NBTType> SeqAccess<'de>
-    for SequenceDeserializer<'reader, Reader, Type>
+for SequenceDeserializer<'reader, Reader, Type>
 {
     type Error = super::Error;
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
-    where
-        T: DeserializeSeed<'de>,
+        where
+            T: DeserializeSeed<'de>,
     {
         if self.current == self.len {
             return Ok(None);
