@@ -25,9 +25,9 @@ pub struct NamedValueSerializer<
 > where
     &'name str: NBTDataType<Type>,
 {
-    pub(crate) target: &'writer mut W,
-    pub(crate) name: StringOrSerializer<'name, K>,
-    pub(crate) phantom: std::marker::PhantomData<Type>,
+    pub target: &'writer mut W,
+    pub name: StringOrSerializer<'name, K>,
+    pub phantom: std::marker::PhantomData<Type>,
 }
 
 impl<'writer, 'name: 'writer, W: Write, Type: NBTType, K: Serialize + ?Sized>

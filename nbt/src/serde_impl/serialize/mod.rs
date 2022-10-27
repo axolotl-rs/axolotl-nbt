@@ -1,5 +1,5 @@
 mod macros;
-mod named;
+pub mod named;
 pub mod sequence;
 
 use crate::serde_impl::Error;
@@ -130,8 +130,8 @@ where
     String: NBTDataType<Type>,
     for<'str> &'str str: NBTDataType<Type>,
 {
-    pub(crate) writer: &'writer mut W,
-    pub(crate) phantom: std::marker::PhantomData<Type>,
+    pub writer: &'writer mut W,
+    pub phantom: std::marker::PhantomData<Type>,
 }
 
 impl<'writer, W: Write, Type: NBTType> ser::SerializeMap for Compound<'writer, W, Type>
