@@ -9,8 +9,8 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::string::FromUtf8Error;
 use thiserror::Error;
 
-mod deserializer;
-mod serialize;
+pub mod deserializer;
+pub mod serialize;
 #[cfg(feature = "value")]
 pub mod value;
 
