@@ -151,7 +151,14 @@ where
     fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
         todo!("serialize_bytes")
     }
-
+    fn serialize_unit_variant(
+        self,
+        _: &'static str,
+        _: u32,
+        variant: &'static str,
+    ) -> Result<Self::Ok, Self::Error> {
+        self.write(variant)
+    }
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
         if let Some(len) = len {
             Ok(SerializeSeq {
@@ -192,15 +199,17 @@ where
         none,
         some,
         unit,
-        unit_struct,
         newtype_struct,
         newtype_variant,
         tuple,
         tuple_struct,
         tuple_variant,
-        struct_variant,
-        unit_variant
+        struct_variant
     );
+
+    fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
+        self.write(name)
+    }
 }
 
 #[derive(Debug)]

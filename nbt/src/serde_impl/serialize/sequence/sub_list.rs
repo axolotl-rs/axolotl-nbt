@@ -180,16 +180,25 @@ where
         none,
         some,
         unit,
-        unit_struct,
         newtype_struct,
         newtype_variant,
         tuple,
         tuple_struct,
         tuple_variant,
-        struct_variant,
-        unit_variant
+        struct_variant
     );
+    fn serialize_unit_variant(
+        self,
+        _: &'static str,
+        _: u32,
+        variant: &'static str,
+    ) -> Result<Self::Ok, Self::Error> {
+        self.write(variant)
+    }
 
+    fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
+        self.write(name)
+    }
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
         self.write(v)
     }
