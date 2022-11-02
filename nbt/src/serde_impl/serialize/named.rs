@@ -196,8 +196,6 @@ where
     }
 
     impossible!(
-        none,
-        some,
         unit,
         newtype_struct,
         newtype_variant,
@@ -209,6 +207,14 @@ where
 
     fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
         self.write(name)
+    }
+
+    fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
+        Ok(())
+    }
+
+    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error> where T: Serialize {
+        value.serialize(self)
     }
 }
 
