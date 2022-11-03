@@ -213,7 +213,10 @@ where
         Ok(())
     }
 
-    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error> where T: Serialize {
+    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error>
+        where
+            T: Serialize,
+    {
         value.serialize(self)
     }
 }

@@ -198,3 +198,29 @@ pub fn value_test() {
         serde_impl::from_reader::<'_, Binary, File, ValueTest>(File::open(path).unwrap()).unwrap();
     println!("{:?}", data);
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EmptyArrayTest {
+    one: Vec<NameLessValue>,
+    two: Vec<Vec<NameLessValue>>,
+}
+
+#[test]
+pub fn empty_array_test() {
+    let tests = EmptyArrayTest {
+        one: vec![],
+        two: vec![vec![]],
+    };
+    let path = test_output().join("empty_array_test.nbt");
+    if path.exists() {
+        std::fs::remove_file(&path).unwrap();
+    }
+    let mut file = File::create(&path).expect("a file");
+    serde_impl::to_writer(&mut file, &tests).unwrap();
+
+    drop(file);
+    let data: EmptyArrayTest =
+        serde_impl::from_reader::<'_, Binary, File, EmptyArrayTest>(File::open(path).unwrap())
+            .unwrap();
+    println!("{:?}", data);
+}

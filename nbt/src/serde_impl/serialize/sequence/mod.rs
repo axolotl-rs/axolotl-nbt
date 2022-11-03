@@ -74,6 +74,19 @@ where
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
+        if !self.wrote_header {
+            let mut inner: SerializeSeqInner<'_, '_, W, Type, K> = SerializeSeqInner {
+                outer: self.outer,
+                name: self.name,
+                length: 0,
+                wrote_header: false,
+                phantom: Default::default(),
+            };
+            Tag::List.write_alone(inner.outer)?;
+            inner.write_name()?;
+            Tag::End.write_alone(self.outer)?;
+            0.write_alone(self.outer)?;
+        }
         Ok(())
     }
 }
@@ -147,7 +160,7 @@ where
 
         Ok(())
     }
-    fn write_name(&mut self) -> Result<(), NBTError> {
+    pub(crate) fn write_name(&mut self) -> Result<(), NBTError> {
         match &self.name {
             StringOrSerializer::String(name) => {
                 Type::write_tag_name(&mut self.outer, name)?;
@@ -228,7 +241,10 @@ where
         Ok(())
     }
 
-    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error> where T: Serialize {
+    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error>
+        where
+            T: Serialize,
+    {
         value.serialize(self)
     }
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {

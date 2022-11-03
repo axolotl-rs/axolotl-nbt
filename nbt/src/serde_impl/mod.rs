@@ -82,12 +82,7 @@ pub fn from_reader<'de, Type: NBTType, R: Read, T: serde::Deserialize<'de>>(
     T::deserialize(&mut der)
 }
 
-pub fn from_buf_reader<
-    'de,
-    Type: NBTType,
-    R: Read + BufRead,
-    T: serde::Deserialize<'de>,
->(
+pub fn from_buf_reader<'de, Type: NBTType, R: Read + BufRead, T: serde::Deserialize<'de>>(
     reader: R,
 ) -> Result<T, Error> {
     let mut der = NBTDeserializer::<R, Type> {
@@ -97,9 +92,7 @@ pub fn from_buf_reader<
     T::deserialize(&mut der)
 }
 
-pub fn from_reader_binary<'de, R: Read, T: serde::Deserialize<'de>>(
-    reader: R,
-) -> Result<T, Error> {
+pub fn from_reader_binary<'de, R: Read, T: serde::Deserialize<'de>>(reader: R) -> Result<T, Error> {
     let mut der = NBTDeserializer::<BufReader<R>, Binary> {
         src: BufReader::new(reader),
         phantom: Default::default(),

@@ -75,6 +75,11 @@ where
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
+        if !self.wrote_header {
+            println!("Writing Empty List");
+            Tag::End.write_alone(self.outer)?;
+            0.write_alone(self.outer)?;
+        }
         Ok(())
     }
 }
@@ -197,7 +202,10 @@ where
         Ok(())
     }
 
-    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error> where T: Serialize {
+    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error>
+        where
+            T: Serialize,
+    {
         value.serialize(self)
     }
     fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
